@@ -1,7 +1,7 @@
 import { Box, Form, FormField, Heading, Layer, LayerExtendedProps, TextInput } from "grommet"
 import { useEffect, useState } from "react"
 import { Hub } from "./model/Hub"
-import { newHub, selectHub, selectIsDuplicate, submitCandidateName } from "./features/hubs/hubsSlice"
+import { expandHub, newHub, selectIsDuplicate, submitCandidateName } from "./features/hubs/hubsSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Warning } from "./Warning"
 import { SubmitOrCancel } from "./SubmitOrCancel"
@@ -32,7 +32,7 @@ function NewHubDialog({ onSubmit, onCancel, ...props }: NewHubDialogProps) {
       allowedIPs: []
     }
     dispatch(newHub(hub))
-    dispatch(selectHub(hub.name))
+    dispatch(expandHub(hub.name))
     onSubmit()
   }
   const isDuplicate = useAppSelector(selectIsDuplicate)

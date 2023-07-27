@@ -1,12 +1,13 @@
 import { Box, Form, FormField, Layer, LayerExtendedProps, TextInput } from 'grommet'
 import { useState } from 'react'
 import { useAppDispatch, useAppSelector } from './app/hooks'
-import { addArrayItem, editHub, selectCurrentHub } from './features/hubs/hubsSlice'
+import { addArrayItem, editHub } from './features/hubs/hubsSlice'
 import { SubmitOrCancel } from './SubmitOrCancel'
 import { Hub } from './model/Hub'
 import { KeyOfType } from './util'
 
 interface EditFieldDialogProps extends LayerExtendedProps {
+  hubName: string,
   fieldName: keyof Hub
   fieldDisplayName: string
   placeholder?: string
@@ -21,6 +22,7 @@ interface FormData {
 }
 
 export const EditFieldDialog = ({
+  hubName,
   fieldName, 
   fieldDisplayName,
   placeholder,
@@ -31,7 +33,7 @@ export const EditFieldDialog = ({
 }: EditFieldDialogProps) => {
   const [formData, setFormData] = useState<FormData>({})
   const dispatch = useAppDispatch()
-  const currentHub = useAppSelector(selectCurrentHub)
+  const hub = useAppSelector(state => state.hubs.entities[hubName])
 
   return <Layer responsive={false} {...props}>
     <Box pad='medium'>
@@ -41,11 +43,11 @@ export const EditFieldDialog = ({
         onSubmit={({ value }) => {
           if (array) {
             const arrayName = fieldName as KeyOfType<Hub, string[]>
-            dispatch(addArrayItem({hubName: currentHub.name, arrayName, arrayValue: value.newValue}))
+            dispatch(addArrayItem({hubName: hub.name, arrayName, arrayValue: value.newValue}))
           }
           else {
             const update = {
-              id: currentHub.name,
+              id: hub.name,
               changes: {[fieldName]: value.newValue}
             }
             dispatch(editHub(update))
@@ -54,7 +56,7 @@ export const EditFieldDialog = ({
         }}
       >
         <FormField label={fieldDisplayName}>
-          <TextInput name="newValue" autoFocus placeholder={placeholder} defaultValue={array ? null : currentHub[fieldName]} />
+          <TextInput name="newValue" autoFocus placeholder={placeholder} defaultValue={array ? null : hub[fieldName]} />
         </FormField>
         <SubmitOrCancel 
             margin={{top: 'medium'}}

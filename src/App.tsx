@@ -1,10 +1,12 @@
-import { grommet, Select, Box, Button, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps} from 'grommet'
+import { grommet, Select, Box, Button, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext} from 'grommet'
 import { deepMerge } from 'grommet/utils'
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { selectHub } from './features/hubs/hubsSlice';
 import NewHubDialog from './NewHubDialog';
 import { HubDisplay } from './HubDisplay';
+import { Add } from 'grommet-icons';
+import { FloatingActionButton } from './FloatingActionButton';
+import { Warning } from './Warning';
 
 const theme = deepMerge(grommet, {
   global: {
@@ -25,34 +27,31 @@ const theme = deepMerge(grommet, {
   }
 })
 
-const appBarTheme = deepMerge(theme, {
+const appBarTheme = {
   select: {
     background: 'white'
   }
-})
+}
 
 const AppBar = ({children, ...props}: HeaderExtendedProps) => (
-  <Grommet theme={appBarTheme}>
+  <ThemeContext.Extend value={appBarTheme}>
     <Header
       className='appBar'
       background="brand"
-      gap='none'
-      pad={{ left: "medium", right: "small", vertical: "small"}}
+      pad='small'
       elevation="medium"
       {...props}
     >
       {children}
     </Header>
-  </Grommet>
+  </ThemeContext.Extend>
 )
 
 function App() {
   const [newHubVisible, setNewHubVisible] = useState(false)
   const showNewHub = () => setNewHubVisible(true)
   const closeNewHub = () => setNewHubVisible(false)
-  const selectHubNames = useAppSelector(state => state.hubs.ids)
-  const currentHubName = useAppSelector(state => state.hubs.currentHubName)
-  const dispatch = useAppDispatch()
+  const hubNames = useAppSelector(state => state.hubs.ids.map(name => name.valueOf() as string))
   return (
     <Grommet theme={theme} full>
       {newHubVisible && <NewHubDialog 
@@ -63,24 +62,25 @@ function App() {
       />}
       <Page>
         <AppBar>
-          <Box justify='start' direction='row' gridArea='left'>
-            <Button primary color="white" label="New Hub Config" onClick={showNewHub} />
-          </Box>
           <Text textAlign='center' size="xxlarge"><strong>WGHub</strong></Text>
-          <Box justify='end' direction='row'>
-            <Select 
-              placeholder="Select a config" 
-              emptySearchMessage="No configs available"
-              value={currentHubName}
-              options={selectHubNames}
-              onChange={({ option }) => dispatch(selectHub(option))}
-            />
-          </Box>
         </AppBar>
-        <PageContent align='center'>
-          {currentHubName && <HubDisplay margin={{top: 'medium'}} />}
+        <PageContent pad='medium' align='center'>
+          <Box gap='medium'>
+          {hubNames.length == 0 && <Warning>No hubs available, create one to begin.</Warning>}
+          {hubNames.map(hubName => {
+            return <HubDisplay
+              key={hubName}
+              hubName={hubName}
+            />
+          })}
+          </Box>
         </PageContent>
       </Page>
+      <FloatingActionButton
+        primary
+        icon={<Add />}
+        onClick={showNewHub}
+      />
     </Grommet>
   );
 }

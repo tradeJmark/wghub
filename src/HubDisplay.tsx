@@ -2,8 +2,8 @@ import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardB
 import { useState } from 'react'
 import { EditFieldDialog } from './EditFieldDialog'
 import { useAppDispatch, useAppSelector } from './app/hooks'
-import { removeArrayItem, selectCurrentHub } from './features/hubs/hubsSlice'
-import { Add } from 'grommet-icons'
+import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
+import { Add, Down, Expand, Trash, Up } from 'grommet-icons'
 import { Hub } from './model/Hub'
 import { KeyOfType } from './util'
 
@@ -20,7 +20,11 @@ interface FieldProps<T extends keyof Hub> {
   editPlaceholder?: string
 }
 
-export const HubDisplay = (props: BoxExtendedProps) => {
+export interface HubDisplayProps extends BoxExtendedProps {
+  hubName: string
+}
+
+export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   const [editField, _setEditField] = useState<EditHubData>(null)
   const setEditField = (name: keyof Hub, displayName: string, array=false, placeholder: string=null) => {
     _setEditField({
@@ -31,13 +35,17 @@ export const HubDisplay = (props: BoxExtendedProps) => {
     })
   }
   const clearEditField = () => _setEditField(null)
-  const currentHub = useAppSelector(selectCurrentHub)
+  const hub = useAppSelector(state => state.hubs.entities[hubName])
+  const expanded = useAppSelector(state => state.hubs.expanded[hubName])
   const dispatch = useAppDispatch()
+  const expand = () => dispatch(expandHub(hub.name))
+  const collapse = () => dispatch(collapseHub(hub.name))
+  const del = () => dispatch(deleteHub(hub.name))
 
   const HubField = ({ name, displayName, editPlaceholder }: FieldProps<KeyOfType<Hub, string>>) => {
     return <Tag
       name={displayName}
-      value={currentHub[name] || '<empty>'}
+      value={hub[name] || '<empty>'}
       onClick={() => setEditField(name, displayName, false, editPlaceholder)}
     />
   }
@@ -48,11 +56,11 @@ export const HubDisplay = (props: BoxExtendedProps) => {
       align='center'
     >
       <Heading margin='none' alignSelf='center' level='4'>{displayName}</Heading>
-      {currentHub[name]?.map(value => {
+      {hub[name]?.map(value => {
         return <Tag
           key={value}
           value={value}
-          onRemove={() => dispatch(removeArrayItem({hubName: currentHub.name, arrayName: name, arrayValue: value}))}
+          onRemove={() => dispatch(removeArrayItem({hubName: hub.name, arrayName: name, arrayValue: value}))}
         />
       })}
       <Button 
@@ -66,6 +74,7 @@ export const HubDisplay = (props: BoxExtendedProps) => {
 
   return <>
     {editField != null && <EditFieldDialog
+      hubName={hub.name}
       fieldName={editField.fieldName}
       fieldDisplayName={editField.fieldDisplayName}
       placeholder={editField.placeholder}
@@ -77,12 +86,16 @@ export const HubDisplay = (props: BoxExtendedProps) => {
     />}
     <Card pad="small" elevation='large' width='large' {...props}>
       <CardHeader>
-        <Box align='center' direction='column' fill='horizontal'>
-          <Heading level={2} margin={{bottom: 'none'}}>{currentHub?.name}</Heading>
-          <Paragraph>{currentHub?.description}</Paragraph>
+        <Box direction='row' justify='between' fill='horizontal'>
+          <Button icon={<Trash />} onClick={del} />
+          <Box align='center' direction='column' fill='horizontal'>
+            <Heading level={2} margin={{bottom: 'none'}}>{hub.name}</Heading>
+            <Paragraph>{hub.description}</Paragraph>
+          </Box>
+          <Button icon={expanded ? <Up /> : <Down />} onClick={expanded ? collapse : expand} />
         </Box>
       </CardHeader>
-      <CardBody>
+      {expanded && <CardBody pad={{bottom: 'medium'}}>
         <Box align='center' gap='small'>
           <HubField name='publicKey' displayName='Public Key' />
           <HubField name='endpoint' displayName='Endpoint' editPlaceholder='<server>:<port>' />
@@ -91,7 +104,7 @@ export const HubDisplay = (props: BoxExtendedProps) => {
           <HubArrayField name='searchDomains' displayName='Search Domains' />
           <HubArrayField name='allowedIPs' displayName='Allowed IPs' editPlaceholder='<network>/<mask>' />
         </Box>
-      </CardBody>
+      </CardBody>}
     </Card>
   </>
 }
