@@ -1,7 +1,7 @@
-import { grommet, Select, Box, Button, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext} from 'grommet'
+import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext } from 'grommet'
 import { deepMerge } from 'grommet/utils'
 import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from './app/hooks';
+import { useAppSelector } from './app/hooks';
 import NewHubDialog from './NewHubDialog';
 import { HubDisplay } from './HubDisplay';
 import { Add } from 'grommet-icons';
@@ -66,7 +66,7 @@ function App() {
         </AppBar>
         <PageContent pad='medium' align='center'>
           <Box gap='medium'>
-          {hubNames.length == 0 && <Warning>No hubs available, create one to begin.</Warning>}
+          {hubNames.length === 0 && <Warning>No hubs available, create one to begin.</Warning>}
           {hubNames.map(hubName => {
             return <HubDisplay
               key={hubName}

@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { EditFieldDialog } from './EditFieldDialog'
 import { useAppDispatch, useAppSelector } from './app/hooks'
 import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
-import { Add, Down, Expand, Trash, Up } from 'grommet-icons'
+import { Add, Down, Trash, Up } from 'grommet-icons'
 import { Hub } from './model/Hub'
 import { KeyOfType } from './util'
+import { SpokeList } from './SpokeList'
 
 interface EditHubData {
   fieldName?: keyof Hub
@@ -103,6 +104,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
           <HubArrayField name='dnsServers' displayName='DNS Servers' />
           <HubArrayField name='searchDomains' displayName='Search Domains' />
           <HubArrayField name='allowedIPs' displayName='Allowed IPs' editPlaceholder='<network>/<mask>' />
+          <SpokeList hubName={hub.name} />
         </Box>
       </CardBody>}
     </Card>
