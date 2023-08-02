@@ -1,4 +1,4 @@
-import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardBody, Button } from 'grommet'
+import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardBody, Button, Collapsible } from 'grommet'
 import { useState } from 'react'
 import { EditFieldDialog } from './EditFieldDialog'
 import { useAppDispatch, useAppSelector } from './app/hooks'
@@ -96,17 +96,19 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
           <Button icon={expanded ? <Up /> : <Down />} onClick={expanded ? collapse : expand} />
         </Box>
       </CardHeader>
-      {expanded && <CardBody pad={{bottom: 'medium'}}>
-        <Box align='center' gap='small'>
-          <HubField name='publicKey' displayName='Public Key' />
-          <HubField name='endpoint' displayName='Endpoint' editPlaceholder='<server>:<port>' />
-          <HubField name='ipAddress' displayName='Hub IP Address' />
-          <HubArrayField name='dnsServers' displayName='DNS Servers' />
-          <HubArrayField name='searchDomains' displayName='Search Domains' />
-          <HubArrayField name='allowedIPs' displayName='Allowed IPs' editPlaceholder='<network>/<mask>' />
-          <SpokeList hubName={hub.name} />
-        </Box>
-      </CardBody>}
+      <Collapsible open={expanded}>
+        <CardBody pad={{bottom: 'medium'}}>
+          <Box align='center' gap='small'>
+            <HubField name='publicKey' displayName='Public Key' />
+            <HubField name='endpoint' displayName='Endpoint' editPlaceholder='<server>:<port>' />
+            <HubField name='ipAddress' displayName='Hub IP Address' />
+            <HubArrayField name='dnsServers' displayName='DNS Servers' />
+            <HubArrayField name='searchDomains' displayName='Search Domains' />
+            <HubArrayField name='allowedIPs' displayName='Allowed IPs' editPlaceholder='<network>/<mask>' />
+            <SpokeList hubName={hub.name} />
+          </Box>
+        </CardBody>
+      </Collapsible>
     </Card>
   </>
 }
