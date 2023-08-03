@@ -54,12 +54,13 @@ function App() {
   const hubNames = useAppSelector(state => state.hubs.ids.map(name => name.valueOf() as string))
   return (
     <Grommet theme={theme} full>
-      {newHubVisible && <NewHubDialog 
+      <NewHubDialog
+        visible={newHubVisible}
         onSubmit={closeNewHub}
         onEsc={closeNewHub}
         onCancel={closeNewHub}
         onClickOutside={closeNewHub}
-      />}
+      />
       <Page>
         <AppBar>
           <Text textAlign='center' size="xxlarge"><strong>WGHub</strong></Text>

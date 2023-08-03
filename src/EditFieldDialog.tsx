@@ -5,8 +5,9 @@ import { addArrayItem, editHub } from './features/hubs/hubsSlice'
 import { SubmitOrCancel } from './SubmitOrCancel'
 import { Hub } from './model/Hub'
 import { KeyOfType } from './util'
+import { Dialog, DialogProps } from './Dialog'
 
-interface EditFieldDialogProps extends LayerExtendedProps {
+interface EditFieldDialogProps extends DialogProps {
   hubName: string,
   fieldName: keyof Hub
   fieldDisplayName: string
@@ -27,6 +28,7 @@ export const EditFieldDialog = ({
   fieldDisplayName,
   placeholder,
   array,
+  visible,
   onCancel,
   onSubmit,
   ...props
@@ -35,7 +37,7 @@ export const EditFieldDialog = ({
   const dispatch = useAppDispatch()
   const hub = useAppSelector(state => state.hubs.entities[hubName])
 
-  return <Layer responsive={false} {...props}>
+  return <Dialog visible={visible} responsive={false} {...props}>
     <Box pad='medium'>
       <Form 
         value={formData}
@@ -65,5 +67,5 @@ export const EditFieldDialog = ({
           />
       </Form>
     </Box>
-  </Layer>
+  </Dialog>
 }

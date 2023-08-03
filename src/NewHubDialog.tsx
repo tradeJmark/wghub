@@ -5,8 +5,9 @@ import { expandHub, newHub, selectIsDuplicate, submitCandidateName } from "./fea
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Warning } from "./Warning"
 import { SubmitOrCancel } from "./SubmitOrCancel"
+import { Dialog, DialogProps } from "./Dialog"
 
-export interface NewHubDialogProps extends LayerExtendedProps {
+export interface NewHubDialogProps extends DialogProps {
   onSubmit?(): void
   onCancel?(): void
 }
@@ -17,7 +18,7 @@ interface FormData {
   publicKey?: string
 }
 
-function NewHubDialog({ onSubmit, onCancel, ...props }: NewHubDialogProps) {
+function NewHubDialog({ onSubmit, onCancel, visible, ...props }: NewHubDialogProps) {
   const dispatch = useAppDispatch()
   useEffect(() => { dispatch(submitCandidateName("")); return () => {} }, [dispatch])
   const [formData, setFormData] = useState<FormData>({})
@@ -38,7 +39,7 @@ function NewHubDialog({ onSubmit, onCancel, ...props }: NewHubDialogProps) {
   const isDuplicate = useAppSelector(selectIsDuplicate)
 
   return (
-    <Layer {...props}>
+    <Dialog visible={visible} {...props}>
       <Box pad='medium'>
         <Heading level='3' margin={{top: 'none', bottom: 'small'}}>New Hub</Heading>
         <Form
@@ -61,7 +62,7 @@ function NewHubDialog({ onSubmit, onCancel, ...props }: NewHubDialogProps) {
           />
         </Form>
       </Box>
-    </Layer>
+    </Dialog>
   )
 }
 

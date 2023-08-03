@@ -8,7 +8,7 @@ import { Hub } from './model/Hub'
 import { KeyOfType } from './util'
 import { SpokeList } from './SpokeList'
 
-interface EditHubData {
+interface HubEditData {
   fieldName?: keyof Hub
   fieldDisplayName?: string
   placeholder?: string
@@ -26,7 +26,7 @@ export interface HubDisplayProps extends BoxExtendedProps {
 }
 
 export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
-  const [editField, _setEditField] = useState<EditHubData>(null)
+  const [editField, _setEditField] = useState<HubEditData>(null)
   const setEditField = (name: keyof Hub, displayName: string, array=false, placeholder: string=null) => {
     _setEditField({
       fieldName: name,
@@ -74,17 +74,18 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   }
 
   return <>
-    {editField != null && <EditFieldDialog
+    <EditFieldDialog
+      visible={editField != null}
       hubName={hub.name}
-      fieldName={editField.fieldName}
-      fieldDisplayName={editField.fieldDisplayName}
-      placeholder={editField.placeholder}
-      array={editField.array}
+      fieldName={editField?.fieldName}
+      fieldDisplayName={editField?.fieldDisplayName}
+      placeholder={editField?.placeholder}
+      array={editField?.array}
       onCancel={() => clearEditField()}
       onEsc={() => clearEditField()}
       onClickOutside={() => clearEditField()}
       onSubmit={() => clearEditField()}
-    />}
+    />
     <Card pad="small" elevation='large' width='large' {...props}>
       <CardHeader>
         <Box direction='row' justify='between' fill='horizontal'>
