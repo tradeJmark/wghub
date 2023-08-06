@@ -1,16 +1,10 @@
-import { Box, Form, FormField, Heading, Layer, LayerExtendedProps, TextInput } from "grommet"
-import { useEffect, useState } from "react"
+import { FormField, TextInput } from "grommet"
+import { useState } from "react"
 import { Hub } from "./model/Hub"
 import { expandHub, newHub, selectIsDuplicate, submitCandidateName } from "./features/hubs/hubsSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Warning } from "./Warning"
-import { SubmitOrCancel } from "./SubmitOrCancel"
 import { Dialog, DialogProps } from "./Dialog"
-
-export interface NewHubDialogProps extends DialogProps {
-  onSubmit?(): void
-  onCancel?(): void
-}
 
 interface FormData {
   name?: string,
@@ -18,11 +12,13 @@ interface FormData {
   publicKey?: string
 }
 
-function NewHubDialog({ onSubmit, onCancel, visible, ...props }: NewHubDialogProps) {
+function NewHubDialog(props: DialogProps<FormData>) {
   const dispatch = useAppDispatch()
-  useEffect(() => { dispatch(submitCandidateName("")); return () => {} }, [dispatch])
-  const [formData, setFormData] = useState<FormData>({})
-  const isNameEmpty = () => (formData.name?.length ?? 0) === 0
+  const [formData, _setFormData] = useState<FormData>({})
+  const setFormData = (newtData: FormData) => {
+    dispatch(submitCandidateName(newtData.name))
+    _setFormData(newtData)
+  }
   const submitData = (formData: FormData) => {
     const hub: Hub = { 
       name: formData.name, 
@@ -34,36 +30,23 @@ function NewHubDialog({ onSubmit, onCancel, visible, ...props }: NewHubDialogPro
     }
     dispatch(newHub(hub))
     dispatch(expandHub(hub.name))
-    onSubmit()
+    setFormData({})
   }
   const isDuplicate = useAppSelector(selectIsDuplicate)
 
-  return (
-    <Dialog visible={visible} {...props}>
-      <Box pad='medium'>
-        <Heading level='3' margin={{top: 'none', bottom: 'small'}}>New Hub</Heading>
-        <Form
-          value={formData}
-          onChange={newData => {
-            dispatch(submitCandidateName(newData.name))
-            setFormData(newData)
-          }}
-          onSubmit={({ value }) => submitData(value)}
-        >
-          <FormField label='Name'><TextInput name='name' autoFocus placeholder='e.g. wg0' /></FormField>
-          <FormField label='Description'><TextInput name='description' placeholder='(optional)' /></FormField>
-          <FormField label='Public Key'><TextInput width='medium' name='publicKey' placeholder='Leave blank for placeholder' /></FormField>
-          <Warning hidden={!isDuplicate}>This name is already in use.</Warning>
-          <SubmitOrCancel 
-            margin={{top: 'medium'}} 
-            disableSubmit={isDuplicate || isNameEmpty()}
-            onCancel={onCancel}
-            submitLabel='Create'
-          />
-        </Form>
-      </Box>
-    </Dialog>
-  )
+  return <Dialog
+    title='New Hub'
+    value={formData}
+    onChange={setFormData}
+    onSubmit={({ value }) => submitData(value)}
+    positiveButtonText="Create"
+    {...props}
+  >
+    <FormField label='Name'><TextInput name='name' autoFocus placeholder='e.g. wg0' /></FormField>
+    <FormField label='Description'><TextInput name='description' placeholder='(optional)' /></FormField>
+    <FormField label='Public Key'><TextInput width='medium' name='publicKey' placeholder='Leave blank for placeholder' /></FormField>
+    <Warning hidden={!isDuplicate}>This name is already in use.</Warning>
+  </Dialog>
 }
 
 export default NewHubDialog

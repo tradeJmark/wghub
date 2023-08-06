@@ -81,10 +81,8 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
       fieldDisplayName={editField?.fieldDisplayName}
       placeholder={editField?.placeholder}
       array={editField?.array}
-      onCancel={() => clearEditField()}
-      onEsc={() => clearEditField()}
-      onClickOutside={() => clearEditField()}
-      onSubmit={() => clearEditField()}
+      onPositive={clearEditField}
+      onNegative={clearEditField}
     />
     <Card pad="small" elevation='large' width='large' {...props}>
       <CardHeader>

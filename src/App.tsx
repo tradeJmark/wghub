@@ -56,10 +56,8 @@ function App() {
     <Grommet theme={theme} full>
       <NewHubDialog
         visible={newHubVisible}
-        onSubmit={closeNewHub}
-        onEsc={closeNewHub}
-        onCancel={closeNewHub}
-        onClickOutside={closeNewHub}
+        onNegative={closeNewHub}
+        onPositive={closeNewHub}
       />
       <Page>
         <AppBar>
