@@ -1,4 +1,4 @@
-import { Box, Button, Heading, List } from 'grommet'
+import { Box, Button, Heading, List, Text } from 'grommet'
 import { Spoke } from './model/Spoke'
 import { getSpokesSelectorForHub } from './features/spokes/spokesSlice'
 import { useAppSelector } from './app/hooks'
@@ -19,13 +19,13 @@ export const SpokeList = ({ hubName }: SpokeListProps) => {
 
   return <>
     <NewSpokeDialog hubName={hubName} visible={newSpokeVisible} onPositive={hideNewSpokeDialog} onNegative={hideNewSpokeDialog} />
-    <Box gap='medium'>
+    <Box gap='medium' align='center'>
       <Heading margin='none' alignSelf='center' level='3'>Spokes</Heading>
-      <List<Spoke>
+      {spokes.length > 0 ? <List<Spoke>
         primaryKey='name'
         secondaryKey='ipAddress'
         data={spokes}
-      />
+      /> : <Text>No spokes associated with this hub.</Text>}
       <Button 
         icon={<Add />}
         primary
