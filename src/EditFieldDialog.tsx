@@ -25,6 +25,7 @@ export const EditFieldDialog = ({
   placeholder,
   array,
   layerProps,
+  onDone,
   ...props
 }: EditFieldDialogProps) => {
   const [formData, setFormData] = useState<FormData>({})
@@ -47,8 +48,11 @@ export const EditFieldDialog = ({
           changes: {[fieldName]: value.newValue}
         }
         dispatch(editHub(update))
-        setFormData({})
       }
+    }}
+    onDone={() => {
+      onDone?.()
+      setFormData({})
     }}
     {...props}
   >

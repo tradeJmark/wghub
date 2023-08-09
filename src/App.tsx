@@ -2,7 +2,7 @@ import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedP
 import { deepMerge } from 'grommet/utils'
 import { useState } from 'react';
 import { useAppSelector } from './app/hooks';
-import NewHubDialog from './NewHubDialog';
+import { NewHubDialog } from './NewHubDialog';
 import { HubDisplay } from './HubDisplay';
 import { Add } from 'grommet-icons';
 import { FloatingActionButton } from './FloatingActionButton';
@@ -56,8 +56,7 @@ function App() {
     <Grommet theme={theme} full>
       <NewHubDialog
         visible={newHubVisible}
-        onNegative={closeNewHub}
-        onPositive={closeNewHub}
+        onDone={closeNewHub}
       />
       <Page>
         <AppBar>

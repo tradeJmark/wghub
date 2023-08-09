@@ -1,18 +1,21 @@
 import { FormField, TextInput } from "grommet"
 import { useState } from "react"
-import { Hub } from "./model/Hub"
-import { expandHub, newHub, selectIsDuplicate, submitCandidateName } from "./features/hubs/hubsSlice"
+import { addSpoke, submitCandidateName, getSelectIsDuplicateSpokeForHub } from "./features/spokes/spokesSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
-import { Warning } from "./Warning"
 import { Dialog, DialogProps } from "./Dialog"
+import { Spoke } from "./model/Spoke"
 
 interface FormData {
   name?: string,
-  description?: string
+  ipAddress?: string
   publicKey?: string
 }
 
-export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
+interface NewSpokeDialogProps extends DialogProps<FormData> {
+  hubName: string
+}
+
+export const NewSpokeDialog = ({ hubName, onDone, ...props }: NewSpokeDialogProps)  => {
   const dispatch = useAppDispatch()
   const [formData, _setFormData] = useState<FormData>({})
   const setFormData = (newtData: FormData) => {
@@ -20,35 +23,31 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
     _setFormData(newtData)
   }
   const submitData = (formData: FormData) => {
-    const hub: Hub = { 
-      name: formData.name, 
-      description: formData.description,
+    const spoke: Spoke = {
+      hub: hubName, 
+      name: formData.name,
       publicKey: formData.publicKey ?? '--placeholder--',
-      dnsServers: [],
-      searchDomains: [],
-      allowedIPs: []
+      ipAddress: formData.ipAddress
     }
-    dispatch(newHub(hub))
-    dispatch(expandHub(hub.name))
+    dispatch(addSpoke(spoke))
   }
-  const isDuplicate = useAppSelector(selectIsDuplicate)
+  const isDuplicateSpoke = useAppSelector(getSelectIsDuplicateSpokeForHub(hubName))
 
   return <Dialog
-    title='New Hub'
+    title='New Spoke'
     value={formData}
     onChange={setFormData}
     onSubmit={({ value }) => submitData(value)}
-    positiveButtonText="Create"
-    canSubmit={!isDuplicate}
+    positiveButtonText="Add"
     onDone={() => {
       onDone?.()
       setFormData({})
     }}
+    canSubmit={!isDuplicateSpoke}
     {...props}
   >
-    <FormField label='Name'><TextInput name='name' autoFocus placeholder='e.g. wg0' /></FormField>
-    <FormField label='Description'><TextInput name='description' placeholder='(optional)' /></FormField>
+    <FormField label='Name'><TextInput name='name' autoFocus placeholder='Human-readable name' /></FormField>
+    <FormField label='IP Address'><TextInput name='ipAddress'/></FormField>
     <FormField label='Public Key'><TextInput width='medium' name='publicKey' placeholder='Leave blank for placeholder' /></FormField>
-    <Warning hidden={!isDuplicate}>This name is already in use.</Warning>
   </Dialog>
 }
