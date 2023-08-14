@@ -1,12 +1,13 @@
 import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext } from 'grommet'
 import { deepMerge } from 'grommet/utils'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppSelector } from './app/hooks';
 import { NewHubDialog } from './NewHubDialog';
 import { HubDisplay } from './HubDisplay';
 import { Add } from 'grommet-icons';
 import { FloatingActionButton } from './FloatingActionButton';
 import { Warning } from './Warning';
+import initRust from 'wghub-rust-web'
 
 const theme = deepMerge(grommet, {
   global: {
@@ -48,6 +49,12 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
 )
 
 function App() {
+  useEffect(() => {
+    const init = async () => { await initRust() }
+    init()
+    return () => {}
+  })
+
   const [newHubVisible, setNewHubVisible] = useState(false)
   const showNewHub = () => setNewHubVisible(true)
   const closeNewHub = () => setNewHubVisible(false)

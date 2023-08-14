@@ -5,8 +5,10 @@ import { useAppDispatch, useAppSelector } from './app/hooks'
 import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
 import { Add, Down, Trash, Up } from 'grommet-icons'
 import { Hub } from './model/Hub'
-import { KeyOfType } from './util'
+import { KeyOfType, unzip } from './util'
 import { SpokeList } from './SpokeList'
+import { HubConfig, HubData, SpokeData, presentHubConfigFile } from 'wghub-rust-web/wghub_rust_web'
+import { getSpokesSelectorForHub } from './features/spokes/spokesSlice'
 
 interface HubEditData {
   fieldName?: keyof Hub
@@ -37,11 +39,19 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   }
   const clearEditField = () => _setEditField(null)
   const hub = useAppSelector(state => state.hubs.entities[hubName])
-  const expanded = useAppSelector(state => state.hubs.expanded[hubName])
+  const expanded = useAppSelector(state => state.hubs.expanded[hub.name])
+  const spokes = useAppSelector(getSpokesSelectorForHub(hub.name))
   const dispatch = useAppDispatch()
   const expand = () => dispatch(expandHub(hub.name))
   const collapse = () => dispatch(collapseHub(hub.name))
   const del = () => dispatch(deleteHub(hub.name))
+
+  const getHubConfig = () => {
+    const hubData = new HubData(hub.ipAddress, hub.endpoint.split(":").at(-1))
+    const spokeData = spokes.map(spoke => new SpokeData(spoke.ipAddress, spoke.publicKey))
+    const [spokeIpAddresses, spokePublicKeys] = unzip(spokeData.map(data => [data.ip_address, data.public_key]))
+    return new HubConfig(hub.name, hubData, spokeIpAddresses, spokePublicKeys)
+  }
 
   const HubField = ({ name, displayName, editPlaceholder }: FieldProps<KeyOfType<Hub, string>>) => {
     return <Tag
@@ -89,7 +99,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
         <Box direction='row' justify='between' fill='horizontal'>
           <Button icon={<Trash />} onClick={del} />
           <Box align='center' direction='column' fill='horizontal'>
-            <Heading level={2} margin={{bottom: 'none'}}>{hub.name}</Heading>
+            <Heading level={2} margin={{bottom: 'none'}} onClick={() => presentHubConfigFile(getHubConfig())}>{hub.name}</Heading>
             <Paragraph>{hub.description}</Paragraph>
           </Box>
           <Button icon={expanded ? <Up /> : <Down />} onClick={expanded ? collapse : expand} />
