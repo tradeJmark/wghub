@@ -1,11 +1,7 @@
-use js_sys::JsString;
+use js_sys::{JsString, Array};
 use wasm_bindgen::prelude::*;
+use web_sys::Blob;
 use wghub_rust::{model::{HubConfig, SpokeData, HubData}, create_hub_config_file};
-
-#[wasm_bindgen]
-extern "C" {
-  fn alert(s: &str);
-}
 
 pub fn zip_spoke_data(spoke_ip_addresses: Vec<JsString>, spoke_public_keys: Vec<JsString>) -> Vec<SpokeData> {
   spoke_ip_addresses.iter()
@@ -24,8 +20,9 @@ impl HubConfigWrapper {
   }
 }
 
-#[wasm_bindgen(js_name = "presentHubConfigFile")]
-pub fn present_hub_config_file(config: &HubConfigWrapper) {
-  let file = create_hub_config_file(&config.0);
-  alert(&file);
+#[wasm_bindgen(js_name = "generateHubConfigFile")]
+pub fn generate_hub_config_file(config: &HubConfigWrapper) -> Blob {
+  let string = create_hub_config_file(&config.0);
+  let array = Array::of1(&string.into());
+  Blob::new_with_str_sequence(&array).unwrap()
 }

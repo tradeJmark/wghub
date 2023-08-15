@@ -4,12 +4,17 @@ use model::{HubData, HubConfig, SpokeData};
 
 pub fn create_hub_config_file(config: &HubConfig) -> String {
   let interface = generate_interface(&config.hub);
-  let peers = config.spokes.iter()
-    .map(generate_peer)
-    .map(|peer| peer + "\n\n")
-    .collect::<String>()
-    .trim_end().to_string();
-  format!("{interface}\n\n{peers}")
+  let peers = if config.spokes.len() > 0 {
+    "\n\n".to_string() +
+    config.spokes.iter()
+      .map(generate_peer)
+      .map(|peer| peer + "\n\n")
+      .collect::<String>()
+      .trim_end()
+  } else {
+    "".to_string()
+  };
+  format!("{interface}{peers}")
 }
 
 fn generate_interface(data: &HubData) -> String {
@@ -17,7 +22,7 @@ fn generate_interface(data: &HubData) -> String {
   let port = &data.endpoint_port;
   let lines = [
     "[Interface]".to_string(),
-    format!("Address = {address}"),
+    format!("Address = {address}/24"),
     "PrivateKey = #!priv!".to_string(),
     format!("ListenPort = {port}")
   ];

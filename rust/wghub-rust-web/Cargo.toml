@@ -14,6 +14,7 @@ default = ["console_error_panic_hook"]
 wghub-rust = { path = "../wghub-rust", features = ["wasm"] }
 wasm-bindgen = "0.2.84"
 js-sys = "0.3.64"
+web-sys = { version = "0.3.64", features = ["Blob"] }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires

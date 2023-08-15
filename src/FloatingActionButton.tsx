@@ -1,25 +1,16 @@
-import { Box, Button, ButtonExtendedProps, Layer, ThemeContext } from "grommet";
+import { Box, ButtonExtendedProps, Layer } from "grommet";
+import { RoundedButton } from "./ui-util";
 
 export const FloatingActionButton = (props: ButtonExtendedProps) => {
-  return <ThemeContext.Extend
-    value={{
-      button: {
-        border: {
-          radius: '1000px'
-        }
-      }
-    }}
+  return <Layer
+    modal={false}
+    plain={true}
+    position='bottom-right'
+    margin='medium'
+    responsive={false}
   >
-    <Layer
-      modal={false}
-      plain={true}
-      position='bottom-right'
-      margin='medium'
-      responsive={false}
-    >
-      <Box justify='end' align='end'>
-        <Button {...props} />
-      </Box>
-    </Layer>
-  </ThemeContext.Extend>
+    <Box justify='end' align='end'>
+      <RoundedButton {...props} />
+    </Box>
+  </Layer>
 }
