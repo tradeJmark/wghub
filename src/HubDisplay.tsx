@@ -24,6 +24,10 @@ interface FieldProps<T extends keyof Hub> {
   editPlaceholder?: string
 }
 
+interface ArrayFieldProps extends FieldProps<KeyOfType<Hub, string[]>> {
+  wrap?: boolean
+}
+
 export interface HubDisplayProps extends BoxExtendedProps {
   hubName: string
 }
@@ -74,20 +78,25 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
       onClick={() => setEditField(name, displayName, false, editPlaceholder)}
     />
   }
-  const HubArrayField = ({ name, displayName, editPlaceholder }: FieldProps<KeyOfType<Hub, string[]>>) => {
+  const HubArrayField = ({ name, displayName, editPlaceholder, wrap }: ArrayFieldProps) => {
     return <Box
       direction='column'
       gap='small'
       align='center'
+      fill='horizontal'
     >
       <Heading margin='none' alignSelf='center' level='4'>{displayName}</Heading>
-      {hub[name]?.map(value => {
-        return <Tag
-          key={value}
-          value={value}
-          onRemove={() => dispatch(removeArrayItem({hubName: hub.name, arrayName: name, arrayValue: value}))}
-        />
-      })}
+      <Box direction={wrap ? 'row' : 'column'} align='center' wrap={wrap} justify='center'>
+        {hub[name]?.map(value => {
+          return <Box pad='xsmall'>
+            <Tag
+              key={value}
+              value={value}
+              onRemove={() => dispatch(removeArrayItem({hubName: hub.name, arrayName: name, arrayValue: value}))}
+            />
+          </Box>
+        })}
+      </Box>
       <Button 
         primary
         icon={<Add />}
@@ -125,9 +134,11 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
             <HubField name='publicKey' displayName='Public Key' />
             <HubField name='endpoint' displayName='Endpoint' editPlaceholder='<server>:<port>' />
             <HubField name='ipAddress' displayName='Hub IP Address' />
-            <HubArrayField name='dnsServers' displayName='DNS Servers' />
-            <HubArrayField name='searchDomains' displayName='Search Domains' />
-            <HubArrayField name='allowedIPs' displayName='Allowed IPs' editPlaceholder='<network>/<mask>' />
+            <Box direction='row' justify='around' fill='horizontal' margin={{top: 'medium'}}>
+              <HubArrayField name='dnsServers' displayName='DNS Servers' />
+              <HubArrayField name='searchDomains' displayName='Search Domains' />
+              <HubArrayField name='allowedIPs' displayName='Allowed IPs' editPlaceholder='<network>/<mask>' />
+            </Box>
             <SpokeList hubName={hub.name} />
           </Box>
         </CardBody>
