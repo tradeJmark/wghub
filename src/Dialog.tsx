@@ -1,5 +1,4 @@
 import { Box, Button, Form, FormProps, Heading, Layer, LayerExtendedProps } from "grommet";
-import React from "react";
 
 export interface DialogProps<T> extends FormProps<T> {
   visible: boolean
@@ -11,7 +10,6 @@ export interface DialogProps<T> extends FormProps<T> {
   onDone?: () => void
   positiveButtonText?: string
   negativeButtonText?: string
-  canSubmit?: boolean
 }
 
 export const Dialog = <T,>({ 
@@ -25,7 +23,6 @@ export const Dialog = <T,>({
   onDone,
   positiveButtonText,
   negativeButtonText,
-  canSubmit,
   ...props
 }: DialogProps<T>) => {
   const fullOnNegative = () => {
@@ -40,17 +37,18 @@ export const Dialog = <T,>({
   return visible ? <Layer onEsc={fullOnNegative} onClickOutside={fullOnNegative} {...layerProps}>
     <Box pad='medium'>
       {title && <Heading level='3' margin={{top: 'none', bottom: 'small'}}>{title}</Heading>}
-      <Form<T> 
+      <Form<T>
         onSubmit={event => {
           onSubmit?.(event)
           fullOnPositive()
-        }} 
+        }}
+        validate="change"
         {...props}
       >
         {children}
         <Box margin={{top: 'medium'}} direction='row' justify='between'>
           <Button secondary type='button' label={negativeButtonText ?? 'Cancel'} onClick={fullOnNegative} />
-          <Button primary type='submit' disabled={!(canSubmit ?? true)} label={positiveButtonText ?? 'Submit'} />
+          <Button primary type='submit' label={positiveButtonText ?? 'Submit'} />
         </Box>
       </Form>
     </Box>

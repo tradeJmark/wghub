@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from './app/hooks'
 import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
 import { Add, Down, Download, Trash, Up } from 'grommet-icons'
 import { Hub } from './model/Hub'
-import { KeyOfType, unzip } from './util'
+import { KeyOfType, ipv4RegExpOptional, ipv4RegExpPartial, unzip } from './util'
 import { SpokeList } from './SpokeList'
 import { HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
 import { getSpokesSelectorForHub } from './features/spokes/spokesSlice'
@@ -16,12 +16,16 @@ interface HubEditData {
   fieldDisplayName?: string
   placeholder?: string
   array?: boolean
+  inputValidation?: {regexp: RegExp, message?: string}
+  inputFinalize?: (newValue: string) => string
 }
 
 interface FieldProps<T extends keyof Hub> {
   name: T
   displayName: string
   editPlaceholder?: string
+  inputValidation?: {regexp: RegExp, message?: string}
+  inputFinalize?: (newValue: string) => string
 }
 
 interface ArrayFieldProps extends FieldProps<KeyOfType<Hub, string[]>> {
@@ -34,12 +38,21 @@ export interface HubDisplayProps extends BoxExtendedProps {
 
 export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   const [editField, _setEditField] = useState<HubEditData>(null)
-  const setEditField = (name: keyof Hub, displayName: string, array=false, placeholder: string=null) => {
+  const setEditField = (
+    name: keyof Hub,
+    displayName: string,
+    placeholder=undefined,
+    inputValidation=undefined,
+    inputFinalize=undefined,
+    array=false
+  ) => {
     _setEditField({
       fieldName: name,
       fieldDisplayName: displayName,
       placeholder,
-      array
+      array,
+      inputValidation,
+      inputFinalize
     })
   }
   const clearEditField = () => _setEditField(null)
@@ -71,14 +84,14 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
 
   const updateDownloadLink = () => setDownloadLink(getDownloadLink())
 
-  const HubField = ({ name, displayName, editPlaceholder }: FieldProps<KeyOfType<Hub, string>>) => {
+  const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<KeyOfType<Hub, string>>) => {
     return <Tag
       name={displayName}
       value={hub[name] || '<empty>'}
-      onClick={() => setEditField(name, displayName, false, editPlaceholder)}
+      onClick={() => setEditField(name, displayName, editPlaceholder, inputValidation, inputFinalize)}
     />
   }
-  const HubArrayField = ({ name, displayName, editPlaceholder, wrap }: ArrayFieldProps) => {
+  const HubArrayField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize, wrap }: ArrayFieldProps) => {
     return <Box
       direction='column'
       gap='small'
@@ -88,9 +101,8 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
       <Heading margin='none' alignSelf='center' level='4'>{displayName}</Heading>
       <Box direction={wrap ? 'row' : 'column'} align='center' wrap={wrap} justify='center'>
         {hub[name]?.map(value => {
-          return <Box pad='xsmall'>
+          return <Box pad='xsmall' key={value}>
             <Tag
-              key={value}
               value={value}
               onRemove={() => dispatch(removeArrayItem({hubName: hub.name, arrayName: name, arrayValue: value}))}
             />
@@ -101,7 +113,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
         primary
         icon={<Add />}
         label="Add"
-        onClick={() => setEditField(name, displayName, true, editPlaceholder)}
+        onClick={() => setEditField(name, displayName, editPlaceholder, inputValidation, inputFinalize, true)}
       />
     </Box>
   }
@@ -114,6 +126,8 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
       fieldDisplayName={editField?.fieldDisplayName}
       placeholder={editField?.placeholder}
       array={editField?.array}
+      validation={editField?.inputValidation}
+      finalize={editField?.inputFinalize}
       onPositive={clearEditField}
       onNegative={clearEditField}
     />
@@ -132,14 +146,38 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
         <CardBody pad={{bottom: 'medium'}}>
           <Box align='center' gap='small'>
             <HubField name='publicKey' displayName='Public Key' />
-            <HubField name='endpoint' displayName='Endpoint' editPlaceholder='<server>:<port>' />
-            <HubField name='ipAddress' displayName='Hub IP Address' />
+            <HubField
+              name='endpoint'
+              displayName='Endpoint'
+              editPlaceholder='<server>:<port>'
+              inputValidation={{
+                regexp: /^[\w.-]+:\d\d?\d?\d?$/,
+                message: 'Must specify address:port'
+              }}
+            />
+            <HubField
+              name='ipAddress'
+              displayName='Hub IP Address'
+              inputValidation={{
+                regexp: ipv4RegExpOptional,
+                message: "Must use format x.x.x.x"
+              }}
+            />
             <Box direction='row' justify='around' fill='horizontal' margin={{top: 'medium'}}>
-              <HubArrayField name='dnsServers' displayName='DNS Servers' />
-              <HubArrayField name='searchDomains' displayName='Search Domains' />
-              <HubArrayField name='allowedIPs' displayName='Allowed IPs' editPlaceholder='<network>/<mask>' />
+              <HubArrayField name='dnsServers' displayName='DNS Servers' inputValidation={{regexp: /^[\w.-]+/}} />
+              <HubArrayField name='searchDomains' displayName='Search Domains' inputValidation={{regexp: /^[\w.-]+/}} />
+              <HubArrayField
+                name='allowedIPs'
+                displayName='Allowed IPs'
+                editPlaceholder='x.x.x.x/yy (default /24)'
+                inputValidation={{
+                  regexp: RegExp(`^${ipv4RegExpPartial.source}(/\\d\\d?)?$`),
+                  message: "Must use format x.x.x.x/yy"
+                }}
+                inputFinalize={(input) => input.includes('/') ? input : `${input}/24`}
+              />
             </Box>
-            <SpokeList hubName={hub.name} />
+            <SpokeList margin={{top: 'medium'}} hubName={hub.name} />
           </Box>
         </CardBody>
         <CardFooter justify='end'>

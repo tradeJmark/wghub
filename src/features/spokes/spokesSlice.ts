@@ -25,7 +25,10 @@ const spokesSlice = createSlice({
 })
 
 export const getSpokesSelectorForHub = (hubName: string) => {
-  return (state: RootState) => Object.values(state.spokes.entities).filter(spoke => spoke.hub === hubName)
+  return createSelector(
+    (state: RootState) => state.spokes.entities,
+    (entities) => Object.values(entities).filter(spoke => spoke.hub === hubName)
+  )
 }
 
 export const getSelectIsDuplicateSpokeForHub = (hubName: string) => createSelector(

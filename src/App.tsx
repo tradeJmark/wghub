@@ -25,6 +25,11 @@ const theme = deepMerge(grommet, {
     icons: {
       color: 'brand'
     }
+  },
+  formField: {
+    label: {
+      requiredIndicator: true
+    }
   }
 })
 
@@ -41,6 +46,7 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
       background="brand"
       pad='small'
       elevation="medium"
+      justify='around'
       {...props}
     >
       {children}
@@ -58,7 +64,7 @@ function App() {
   const [newHubVisible, setNewHubVisible] = useState(false)
   const showNewHub = () => setNewHubVisible(true)
   const closeNewHub = () => setNewHubVisible(false)
-  const hubNames = useAppSelector(state => state.hubs.ids.map(name => name.valueOf() as string))
+  const hubNames = useAppSelector(state => state.hubs.ids)
   return (
     <Grommet theme={theme} full>
       <NewHubDialog
@@ -75,7 +81,7 @@ function App() {
           {hubNames.map(hubName => {
             return <HubDisplay
               key={hubName}
-              hubName={hubName}
+              hubName={hubName.valueOf() as string}
             />
           })}
           </Box>

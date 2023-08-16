@@ -12,3 +12,7 @@ export function unzip<T>(list: [T, T][]): [T[], T[]] {
   })
   return [a, b]
 }
+
+export const ipv4RegExpPartial = /\d\d?\d?\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?/
+export const ipv4RegExp = RegExp(`^${ipv4RegExpPartial.source}$`)
+export const ipv4RegExpOptional = RegExp(`^(${ipv4RegExpPartial.source})?$`)

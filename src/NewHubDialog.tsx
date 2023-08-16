@@ -3,13 +3,11 @@ import { useState } from "react"
 import { Hub } from "./model/Hub"
 import { expandHub, newHub, selectIsDuplicate, submitCandidateName } from "./features/hubs/hubsSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
-import { Warning } from "./Warning"
 import { Dialog, DialogProps } from "./Dialog"
 
 interface FormData {
   name?: string,
   description?: string
-  publicKey?: string
 }
 
 export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
@@ -23,7 +21,6 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
     const hub: Hub = { 
       name: formData.name, 
       description: formData.description,
-      publicKey: formData.publicKey ?? '--placeholder--',
       dnsServers: [],
       searchDomains: [],
       allowedIPs: []
@@ -38,17 +35,21 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
     value={formData}
     onChange={setFormData}
     onSubmit={({ value }) => submitData(value)}
-    positiveButtonText="Create"
-    canSubmit={!isDuplicate}
+    positiveButtonText='Create'
     onDone={() => {
       onDone?.()
       setFormData({})
     }}
     {...props}
   >
-    <FormField label='Name'><TextInput name='name' autoFocus placeholder='e.g. wg0' /></FormField>
-    <FormField label='Description'><TextInput name='description' placeholder='(optional)' /></FormField>
-    <FormField label='Public Key'><TextInput width='medium' name='publicKey' placeholder='Leave blank for placeholder' /></FormField>
-    <Warning hidden={!isDuplicate}>This name is already in use.</Warning>
+    <FormField
+      required
+      label='Name'
+      name='name'
+      validate={() => isDuplicate ? "This name is already in use." : undefined}
+    >
+      <TextInput name='name' autoFocus placeholder='e.g. wg0' />
+    </FormField>
+    <FormField label='Description' name='description'><TextInput name='description' placeholder='(optional)' /></FormField>
   </Dialog>
 }

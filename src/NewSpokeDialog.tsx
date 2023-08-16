@@ -4,11 +4,11 @@ import { addSpoke, submitCandidateName, getSelectIsDuplicateSpokeForHub } from "
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Dialog, DialogProps } from "./Dialog"
 import { Spoke } from "./model/Spoke"
+import { ipv4RegExp } from "./util"
 
 interface FormData {
   name?: string,
   ipAddress?: string
-  publicKey?: string
 }
 
 interface NewSpokeDialogProps extends DialogProps<FormData> {
@@ -26,7 +26,6 @@ export const NewSpokeDialog = ({ hubName, onDone, ...props }: NewSpokeDialogProp
     const spoke: Spoke = {
       hub: hubName, 
       name: formData.name,
-      publicKey: formData.publicKey ?? '--placeholder--',
       ipAddress: formData.ipAddress
     }
     dispatch(addSpoke(spoke))
@@ -43,11 +42,22 @@ export const NewSpokeDialog = ({ hubName, onDone, ...props }: NewSpokeDialogProp
       onDone?.()
       setFormData({})
     }}
-    canSubmit={!isDuplicateSpoke}
     {...props}
   >
-    <FormField label='Name'><TextInput name='name' autoFocus placeholder='Human-readable name' /></FormField>
-    <FormField label='IP Address'><TextInput name='ipAddress'/></FormField>
-    <FormField label='Public Key'><TextInput width='medium' name='publicKey' placeholder='Leave blank for placeholder' /></FormField>
+    <FormField label='Name' name='name' required validate={() => isDuplicateSpoke ? "This name is already in use." : undefined}>
+      <TextInput name='name' autoFocus placeholder='Human-readable name' />
+    </FormField>
+    <FormField
+      label='IP Address'
+      name='ipAddress'
+      required
+      validate={{
+        regexp: ipv4RegExp,
+        message: "Must be in format x.x.x.x"
+      }}
+      validateOn="blur"
+    >
+      <TextInput name='ipAddress' placeholder="x.x.x.x" />
+    </FormField>
   </Dialog>
 }

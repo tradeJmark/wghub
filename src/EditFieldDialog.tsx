@@ -1,5 +1,5 @@
 import { FormField, TextInput } from 'grommet'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from './app/hooks'
 import { addArrayItem, editHub } from './features/hubs/hubsSlice'
 import { Hub } from './model/Hub'
@@ -12,10 +12,12 @@ interface EditFieldDialogProps extends DialogProps<FormData> {
   fieldDisplayName: string
   placeholder?: string
   array?: boolean
+  validation?: { regexp: RegExp, message?: string }
+  finalize?: (newValue: string) => string
 }
 
 interface FormData {
-  newValue?: string
+  newValue: string
 }
 
 export const EditFieldDialog = ({
@@ -26,38 +28,46 @@ export const EditFieldDialog = ({
   array,
   layerProps,
   onDone,
+  validation,
+  finalize,
   ...props
 }: EditFieldDialogProps) => {
-  const [formData, setFormData] = useState<FormData>({})
   const dispatch = useAppDispatch()
   const hub = useAppSelector(state => state.hubs.entities[hubName])
+  const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as KeyOfType<Hub, string>]}), [hub, fieldName, array])
+  const [formData, setFormData] = useState<FormData>(getDefaultValue())
+  useEffect(() => {
+    setFormData(getDefaultValue())
+  }, [getDefaultValue])
 
   return <Dialog 
     layerProps={{responsive: false, ...layerProps}}
     value={formData}
     onChange={setFormData}
+    validate='submit'
     positiveButtonText={array ? 'Add' : 'Update'}
     onSubmit={({ value }) => {
+      const finalizedValue = finalize?.(value.newValue) ?? value.newValue
       if (array) {
         const arrayName = fieldName as KeyOfType<Hub, string[]>
-        dispatch(addArrayItem({hubName: hub.name, arrayName, arrayValue: value.newValue}))
+        dispatch(addArrayItem({hubName: hub.name, arrayName, arrayValue: finalizedValue}))
       }
       else {
         const update = {
           id: hub.name,
-          changes: {[fieldName]: value.newValue}
+          changes: {[fieldName]: finalizedValue}
         }
         dispatch(editHub(update))
       }
     }}
     onDone={() => {
       onDone?.()
-      setFormData({})
+      setFormData({newValue: ''})
     }}
     {...props}
   >
-    <FormField label={fieldDisplayName}>
-      <TextInput name="newValue" autoFocus placeholder={placeholder} defaultValue={array ? null : hub[fieldName]} />
+    <FormField label={fieldDisplayName} name='newValue' validate={validation} required={array ? {indicator: false} : false}>
+      <TextInput name='newValue' autoFocus placeholder={placeholder} />
     </FormField>
   </Dialog>
 }
