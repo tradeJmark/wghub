@@ -7,9 +7,11 @@ import { Spoke } from "./model/Spoke"
 import { ipv4RegExp } from "./util"
 
 interface FormData {
-  name?: string,
-  ipAddress?: string
+  name: string,
+  ipAddress: string
 }
+
+const emptyForm = {name: '', ipAddress: ''}
 
 interface NewSpokeDialogProps extends DialogProps<FormData> {
   hubName: string
@@ -17,7 +19,7 @@ interface NewSpokeDialogProps extends DialogProps<FormData> {
 
 export const NewSpokeDialog = ({ hubName, onDone, ...props }: NewSpokeDialogProps)  => {
   const dispatch = useAppDispatch()
-  const [formData, _setFormData] = useState<FormData>({})
+  const [formData, _setFormData] = useState<FormData>(emptyForm)
   const setFormData = (newtData: FormData) => {
     dispatch(submitCandidateName(newtData.name))
     _setFormData(newtData)
@@ -40,7 +42,7 @@ export const NewSpokeDialog = ({ hubName, onDone, ...props }: NewSpokeDialogProp
     positiveButtonText="Add"
     onDone={() => {
       onDone?.()
-      setFormData({})
+      setFormData(emptyForm)
     }}
     {...props}
   >

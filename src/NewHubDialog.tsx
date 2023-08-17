@@ -6,13 +6,15 @@ import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Dialog, DialogProps } from "./Dialog"
 
 interface FormData {
-  name?: string,
-  description?: string
+  name: string,
+  description: string
 }
+
+const emptyForm = {name: '', description: ''}
 
 export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
   const dispatch = useAppDispatch()
-  const [formData, _setFormData] = useState<FormData>({})
+  const [formData, _setFormData] = useState<FormData>(emptyForm)
   const setFormData = (newtData: FormData) => {
     dispatch(submitCandidateName(newtData.name))
     _setFormData(newtData)
@@ -38,7 +40,7 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
     positiveButtonText='Create'
     onDone={() => {
       onDone?.()
-      setFormData({})
+      setFormData(emptyForm)
     }}
     {...props}
   >

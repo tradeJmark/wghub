@@ -9,7 +9,7 @@ import { KeyOfType, ipv4RegExpOptional, ipv4RegExpPartial, unzip } from './util'
 import { SpokeList } from './SpokeList'
 import { HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
 import { getSpokesSelectorForHub } from './features/spokes/spokesSlice'
-import { RoundedButton } from './ui-util'
+import { RoundedButton, TruncatableTag } from './ui-util'
 
 interface HubEditData {
   fieldName?: keyof Hub
@@ -85,7 +85,8 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   const updateDownloadLink = () => setDownloadLink(getDownloadLink())
 
   const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<KeyOfType<Hub, string>>) => {
-    return <Tag
+    return <TruncatableTag
+      limit={30}
       name={displayName}
       value={hub[name] || '<empty>'}
       onClick={() => setEditField(name, displayName, editPlaceholder, inputValidation, inputFinalize)}
