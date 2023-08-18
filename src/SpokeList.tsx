@@ -15,18 +15,28 @@ export const SpokeList = ({ hubName, ...props }: SpokeListProps) => {
   const spokes = useAppSelector(getSpokesSelectorForHub(hubName))
   const disabled = useAppSelector(getDisabledSpokesForHub(hubName))
 
+  const [spokeToEdit, setEditSpoke] = useState<string>(undefined)
+
   const [newSpokeVisible, setNewSpokeVisible] = useState(false)
   const showNewSpokeDialog = () => setNewSpokeVisible(true)
-  const hideNewSpokeDialog = () => setNewSpokeVisible(false)
+  const hideNewSpokeDialog = () => {
+    setNewSpokeVisible(false)
+    setEditSpoke(undefined)
+  }
+
+  const editSpoke = (spoke: Spoke) => {
+    setEditSpoke(spoke.name)
+    showNewSpokeDialog()
+  }
 
   return <>
-    <NewSpokeDialog hubName={hubName} visible={newSpokeVisible} onPositive={hideNewSpokeDialog} onNegative={hideNewSpokeDialog} />
+    <NewSpokeDialog hubName={hubName} spokeName={spokeToEdit} visible={newSpokeVisible} onPositive={hideNewSpokeDialog} onNegative={hideNewSpokeDialog} />
     <Box {...props} gap='medium' align='center'>
       <Heading margin='none' alignSelf='center' level='3'>Spokes</Heading>
       {spokes.length > 0 ? <List<Spoke>
         primaryKey='name'
         itemKey={idForSpoke}
-        secondaryKey={spoke => <SpokeListSecondary spoke={spoke} />}
+        secondaryKey={spoke => <SpokeListSecondary key={spoke.name} spoke={spoke} onEdit={editSpoke} />}
         data={spokes}
         disabled={disabled}
       /> : <Text>No spokes associated with this hub.</Text>}

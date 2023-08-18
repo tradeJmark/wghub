@@ -16,7 +16,7 @@ export const newSpoke = (hub: string, name: string, ipAddress: string, publicKey
       hub,
       name,
       ipAddress,
-      publicKey: publicKey ?? null,
+      publicKey: publicKey || null,
       disabled: disabled ?? false
   }
 }

@@ -14,7 +14,7 @@ const spokesSlice = createSlice({
   name: 'spokes',
   initialState: spokesAdapter.getInitialState<SpokeState>({}),
   reducers: {
-    addSpoke: spokesAdapter.addOne,
+    setSpoke: spokesAdapter.upsertOne,
     deleteSpoke: spokesAdapter.removeOne,
     toggleDisableSpoke: (state, { payload }: PayloadAction<string>) => {
       state.entities[payload].disabled = !state.entities[payload].disabled
@@ -52,6 +52,6 @@ export const getSelectIsDuplicateSpokeForHub = (hubName: string) => createSelect
   (candidateHash, names) => names.includes(candidateHash)
 )
 
-export const { addSpoke, deleteSpoke, toggleDisableSpoke, submitCandidateName } = spokesSlice.actions
+export const { setSpoke, deleteSpoke, toggleDisableSpoke, submitCandidateName } = spokesSlice.actions
 
 export default spokesSlice.reducer

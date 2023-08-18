@@ -1,41 +1,69 @@
 pub mod model;
 
-use model::{HubData, HubConfig, SpokeData};
+use model::{HubData, HubConfig, SpokeData, SpokeCommonData, SpokeConfig};
 
 pub fn create_hub_config_file(config: &HubConfig) -> String {
-  let interface = generate_interface(&config.hub);
-  let peers = if config.spokes.len() > 0 {
-    "\n\n".to_string() +
-    config.spokes.iter()
-      .map(generate_peer)
-      .map(|peer| peer + "\n\n")
-      .collect::<String>()
-      .trim_end()
-  } else {
-    "".to_string()
-  };
-  format!("{interface}{peers}")
+  let interface = generate_hub_interface(&config.hub);
+  let peers = config.spokes.iter()
+      .map(generate_spoke_peer)
+      .collect::<Vec<String>>()
+      .join("\n\n");
+  join_non_empty(vec![interface, peers], "\n\n") + "\n"
 }
 
-fn generate_interface(data: &HubData) -> String {
-  let address = &data.ip_address;
-  let port = &data.endpoint_port;
+pub fn create_spoke_config_file(config: &SpokeConfig) -> String {
+  let interface = generate_spoke_interface(&config.spoke, &config.common);
+  let peer = generate_hub_peer(&config.hub, &config.common);
+  join_non_empty(vec![interface, peer], "\n\n") + "\n"
+}
+
+fn generate_hub_interface(data: &HubData) -> String {
   let lines = [
     "[Interface]".to_string(),
-    format!("Address = {address}/24"),
+    format!("Address = {}/24", data.ip_address),
     "PrivateKey = #!priv!".to_string(),
-    format!("ListenPort = {port}")
+    format!("ListenPort = {}", data.endpoint_port)
   ];
   lines.join("\n")
 }
 
-fn generate_peer(data: &SpokeData) -> String {
-  let public_key = &data.public_key;
-  let ip_address = &data.ip_address;
+fn generate_spoke_interface(data: &SpokeData, common: &SpokeCommonData) -> String {
+  let dns_servers = common.dns_servers.join(",");
+  let search_domains = common.search_domains.join(",");
+  let dns_string = join_non_empty(vec![dns_servers, search_domains], ",");
+  let mut  lines = vec![
+    "[Interface]".to_string(),
+    format!("Address = {}/32", data.ip_address),
+    "PrivateKey = #!priv!".to_string()
+  ];
+  if dns_string.len() > 0 {
+    lines.push(format!("DNS = {dns_string}"));
+  }
+  lines.join("\n")
+}
+
+fn generate_spoke_peer(data: &SpokeData) -> String {
   let lines = [
     "[Peer]".to_string(),
-    format!("PublicKey = {public_key}"),
-    format!("AllowedIPs = {ip_address}/32")
+    format!("PublicKey = {}", &data.public_key),
+    format!("AllowedIPs = {}/32", &data.ip_address)
   ];
   lines.join("\n")
+}
+
+fn generate_hub_peer(data: &HubData, common: &SpokeCommonData) -> String {
+  let mut lines = vec![
+    "[Peer]".to_string(),
+    format!("PublicKey = {}", data.public_key),
+    format!("Endpoint = {}:{}", data.endpoint_address, data.endpoint_port)
+  ];
+  if common.allowed_ips.len() > 0 {
+    lines.push(format!("AllowedIPs = {}", common.allowed_ips.join(",")))
+  }
+  lines.join("\n")
+}
+
+fn join_non_empty(vec: Vec<String>, separator: &str) -> String {
+  let filtered: Vec<String> = vec.into_iter().filter(|str| !str.is_empty()).collect();
+  filtered.join(separator)
 }

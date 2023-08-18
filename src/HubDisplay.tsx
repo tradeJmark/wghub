@@ -4,7 +4,7 @@ import { EditFieldDialog } from './EditFieldDialog'
 import { useAppDispatch, useAppSelector } from './app/hooks'
 import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
 import { Add, Down, Download, Trash, Up } from 'grommet-icons'
-import { Hub } from './model/Hub'
+import { Hub, hubSplitEndpoint } from './model/Hub'
 import { KeyOfType, ipv4RegExpOptional, ipv4RegExpPartial, unzip } from './util'
 import { SpokeList } from './SpokeList'
 import { HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
@@ -69,7 +69,8 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   const del = () => dispatch(deleteHub(hub.name))
 
   const getHubConfig = () => {
-    const hubData = new HubData(hub.ipAddress, hub.endpoint.split(":").at(-1))
+    const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
+    const hubData = new HubData(hub.publicKey ?? '', hub.ipAddress, endpointAddress, endpointPort)
     const spokeData = spokes.map(spoke => new SpokeData(spoke.ipAddress, spoke.publicKey))
     const [spokeIpAddresses, spokePublicKeys] = unzip(spokeData.map(data => [data.ip_address, data.public_key]))
     return new HubConfig(hub.name, hubData, spokeIpAddresses, spokePublicKeys)

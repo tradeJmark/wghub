@@ -8,3 +8,8 @@ export interface Hub {
   searchDomains: string[]
   allowedIPs: string[]
 }
+
+export const hubSplitEndpoint = (hub: Hub): [string, string] => {
+  const [address, port] = hub.endpoint?.split(":")
+  return [address, port]
+}
