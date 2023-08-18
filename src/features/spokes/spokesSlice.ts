@@ -1,12 +1,9 @@
 import { PayloadAction, createEntityAdapter, createSelector, createSlice } from "@reduxjs/toolkit"
-import { Spoke } from '../../model/Spoke'
-import { hash } from 'ohash'
+import { Spoke, genSpokeId, idForSpoke } from '../../model/Spoke'
 import { RootState } from "../../app/store"
 
-const hashSpoke = (name: string, hub: string) => hash({ name, hub })
-
 const spokesAdapter = createEntityAdapter<Spoke>({
-  selectId: ({ name, hub }) => hashSpoke(name, hub)
+  selectId: idForSpoke
 })
 
 interface SpokeState {
@@ -18,6 +15,10 @@ const spokesSlice = createSlice({
   initialState: spokesAdapter.getInitialState<SpokeState>({}),
   reducers: {
     addSpoke: spokesAdapter.addOne,
+    deleteSpoke: spokesAdapter.removeOne,
+    toggleDisableSpoke: (state, { payload }: PayloadAction<string>) => {
+      state.entities[payload].disabled = !state.entities[payload].disabled
+    },
     submitCandidateName: (state, { payload }: PayloadAction<string>) => {
       state.candidateName = payload
     }
@@ -31,12 +32,26 @@ export const getSpokesSelectorForHub = (hubName: string) => {
   )
 }
 
+export const getDisabledSpokesForHub = (hubName: string) => {
+  return createSelector(
+    getSpokesSelectorForHub(hubName),
+    (spokes) => spokes.filter(spoke => spoke.disabled || spoke.publicKey === null).map(idForSpoke)
+  )
+}
+
+export const getEnabledSpokesForHub = (hubName: string) => {
+  return createSelector(
+    getSpokesSelectorForHub(hubName),
+    (spokes) => spokes.filter(spoke => !spoke.disabled && spoke.publicKey !== null)
+  )
+}
+
 export const getSelectIsDuplicateSpokeForHub = (hubName: string) => createSelector(
-  (state: RootState) => hashSpoke(state.spokes.candidateName, hubName),
+  (state: RootState) => genSpokeId(hubName, state.spokes.candidateName),
   (state: RootState) => state.spokes.ids,
   (candidateHash, names) => names.includes(candidateHash)
 )
 
-export const { addSpoke, submitCandidateName } = spokesSlice.actions
+export const { addSpoke, deleteSpoke, toggleDisableSpoke, submitCandidateName } = spokesSlice.actions
 
 export default spokesSlice.reducer

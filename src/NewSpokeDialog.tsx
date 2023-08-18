@@ -3,7 +3,7 @@ import { useState } from "react"
 import { addSpoke, submitCandidateName, getSelectIsDuplicateSpokeForHub } from "./features/spokes/spokesSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Dialog, DialogProps } from "./Dialog"
-import { Spoke } from "./model/Spoke"
+import { newSpoke } from "./model/Spoke"
 import { ipv4RegExp } from "./util"
 
 interface FormData {
@@ -25,11 +25,7 @@ export const NewSpokeDialog = ({ hubName, onDone, ...props }: NewSpokeDialogProp
     _setFormData(newtData)
   }
   const submitData = (formData: FormData) => {
-    const spoke: Spoke = {
-      hub: hubName, 
-      name: formData.name,
-      ipAddress: formData.ipAddress
-    }
+    const spoke = newSpoke(hubName, formData.name, formData.ipAddress)
     dispatch(addSpoke(spoke))
   }
   const isDuplicateSpoke = useAppSelector(getSelectIsDuplicateSpokeForHub(hubName))

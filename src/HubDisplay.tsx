@@ -8,7 +8,7 @@ import { Hub } from './model/Hub'
 import { KeyOfType, ipv4RegExpOptional, ipv4RegExpPartial, unzip } from './util'
 import { SpokeList } from './SpokeList'
 import { HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
-import { getSpokesSelectorForHub } from './features/spokes/spokesSlice'
+import { getEnabledSpokesForHub } from './features/spokes/spokesSlice'
 import { RoundedButton, TruncatableTag } from './ui-util'
 
 interface HubEditData {
@@ -62,7 +62,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
     return Boolean(hub.endpoint) && Boolean(hub.ipAddress)
   })
   const expanded = useAppSelector(state => state.hubs.expanded[hubName])
-  const spokes = useAppSelector(getSpokesSelectorForHub(hubName))
+  const spokes = useAppSelector(getEnabledSpokesForHub(hubName))
   const dispatch = useAppDispatch()
   const expand = () => dispatch(expandHub(hub.name))
   const collapse = () => dispatch(collapseHub(hub.name))
