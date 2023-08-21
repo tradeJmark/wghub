@@ -34,7 +34,7 @@ export const EditFieldDialog = ({
 }: EditFieldDialogProps) => {
   const dispatch = useAppDispatch()
   const hub = useAppSelector(state => state.hubs.entities[hubName])
-  const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as KeyOfType<Hub, string>]}), [hub, fieldName, array])
+  const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as KeyOfType<Hub, string>] ?? ''}), [hub, fieldName, array])
   const [formData, setFormData] = useState<FormData>(getDefaultValue())
   useEffect(() => {
     setFormData(getDefaultValue())

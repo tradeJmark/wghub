@@ -37,7 +37,6 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
         pad='xxsmall'
         onClick={() => dispatch(toggleDisableSpoke(idForSpoke(spoke)))}
       />
-      <Button icon={<Edit />} pad='xxsmall' onClick={() => onEdit(spoke)} />
       <Button
         icon={<Download />}
         pad='xxsmall'
@@ -45,6 +44,7 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
         href={Boolean(downloadUrl) ? downloadUrl : undefined}
         download={Boolean(downloadUrl) ? `${spoke.name}.conf` : undefined}
       />
+      <Button icon={<Edit />} pad='xxsmall' onClick={() => onEdit(spoke)} />
       <Button icon={<Trash />} pad='xxsmall' onClick={() => dispatch(deleteSpoke(idForSpoke(spoke)))} />
     </Box>
   </Box>

@@ -1,5 +1,5 @@
-import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardBody, Button, Collapsible, CardFooter } from 'grommet'
-import { useState } from 'react'
+import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardBody, Button, Collapsible, CardFooter, ResponsiveContext } from 'grommet'
+import { useContext, useState } from 'react'
 import { EditFieldDialog } from './EditFieldDialog'
 import { useAppDispatch, useAppSelector } from './app/hooks'
 import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
@@ -56,6 +56,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
     })
   }
   const clearEditField = () => _setEditField(null)
+
   const hub = useAppSelector(state => state.hubs.entities[hubName])
   const validFile = useAppSelector(state => {
     const hub = state.hubs.entities[hubName]
@@ -84,6 +85,8 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   const [downloadLink, setDownloadLink] = useState<string>(validFile ? getDownloadLink() : "#")
 
   const updateDownloadLink = () => setDownloadLink(getDownloadLink())
+
+  const size = useContext(ResponsiveContext)
 
   const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<KeyOfType<Hub, string>>) => {
     return <TruncatableTag
@@ -165,9 +168,9 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
                 message: "Must use format x.x.x.x"
               }}
             />
-            <Box direction='row' justify='around' fill='horizontal' margin={{top: 'medium'}}>
-              <HubArrayField name='dnsServers' displayName='DNS Servers' inputValidation={{regexp: /^[\w.-]+/}} />
-              <HubArrayField name='searchDomains' displayName='Search Domains' inputValidation={{regexp: /^[\w.-]+/}} />
+            <Box direction={size === 'small' ? 'column' : 'row'} gap='medium' justify='around' fill='horizontal' margin={{top: 'medium'}}>
+              <HubArrayField name='dnsServers' displayName='DNS Servers' inputValidation={{regexp: /^[\w.-]+$/}} />
+              <HubArrayField name='searchDomains' displayName='Search Domains' inputValidation={{regexp: /^[\w.-]+$/}} />
               <HubArrayField
                 name='allowedIPs'
                 displayName='Allowed IPs'
