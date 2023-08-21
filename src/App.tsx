@@ -8,6 +8,7 @@ import { Add } from 'grommet-icons';
 import { FloatingActionButton } from './FloatingActionButton';
 import { Warning } from './Warning';
 import initRust from 'wghub-rust-web'
+import { ImpExpFooter } from './ImpExpFooter';
 
 const theme = deepMerge(grommet, {
   global: {
@@ -92,6 +93,7 @@ export const App = () => {
         icon={<Add />}
         onClick={showNewHub}
       />
+      <ImpExpFooter showExport={hubNames.length > 0} />
     </Grommet>
   );
 }

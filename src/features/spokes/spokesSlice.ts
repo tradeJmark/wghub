@@ -21,7 +21,8 @@ const spokesSlice = createSlice({
     },
     submitCandidateName: (state, { payload }: PayloadAction<string>) => {
       state.candidateName = payload
-    }
+    },
+    importSpokes: spokesAdapter.addMany
   }
 })
 
@@ -52,6 +53,6 @@ export const getSelectIsDuplicateSpokeForHub = (hubName: string) => createSelect
   (candidateHash, names) => names.includes(candidateHash)
 )
 
-export const { setSpoke, deleteSpoke, toggleDisableSpoke, submitCandidateName } = spokesSlice.actions
+export const { setSpoke, deleteSpoke, toggleDisableSpoke, submitCandidateName, importSpokes } = spokesSlice.actions
 
 export default spokesSlice.reducer
