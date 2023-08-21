@@ -1,4 +1,5 @@
-import { Box, Button, Form, FormProps, Heading, Layer, LayerExtendedProps } from "grommet";
+import { Box, Button, Form, FormProps, Heading, Layer, LayerExtendedProps, ResponsiveContext } from "grommet";
+import { useContext } from "react";
 
 export interface DialogProps<T> extends FormProps<T> {
   visible: boolean
@@ -34,7 +35,15 @@ export const Dialog = <T,>({
     onDone?.()
   }
 
-  return visible ? <Layer onEsc={fullOnNegative} onClickOutside={fullOnNegative} {...layerProps}>
+  const size = useContext(ResponsiveContext)
+
+  return visible ? <Layer
+    position={size === 'small' ? 'top' : 'center'}
+    margin={layerProps?.responsive ?? true ? undefined : 'large'}
+    onEsc={fullOnNegative}
+    onClickOutside={fullOnNegative}
+    {...layerProps}
+  >
     <Box pad='medium'>
       {title && <Heading level='3' margin={{top: 'none', bottom: 'small'}}>{title}</Heading>}
       <Form<T>

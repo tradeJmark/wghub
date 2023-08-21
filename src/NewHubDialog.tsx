@@ -50,7 +50,7 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
       name='name'
       validate={() => isDuplicate ? "This name is already in use." : undefined}
     >
-      <TextInput name='name' autoFocus placeholder='e.g. wg0' />
+      <TextInput name='name' autoFocus autoCapitalize='off' placeholder='e.g. wg0' />
     </FormField>
     <FormField label='Description' name='description'><TextInput name='description' placeholder='(optional)' /></FormField>
   </Dialog>

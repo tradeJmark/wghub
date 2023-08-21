@@ -54,7 +54,7 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
   </ThemeContext.Extend>
 )
 
-function App() {
+export const App = () => {
   useEffect(() => {
     const init = async () => { await initRust() }
     init()
@@ -95,5 +95,3 @@ function App() {
     </Grommet>
   );
 }
-
-export default App;

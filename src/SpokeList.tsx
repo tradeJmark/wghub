@@ -1,9 +1,9 @@
-import { Box, BoxExtendedProps, Button, Heading, List, Text } from 'grommet'
+import { Box, BoxExtendedProps, Button, Heading, List, ResponsiveContext, Text } from 'grommet'
 import { Spoke, idForSpoke } from './model/Spoke'
 import { getDisabledSpokesForHub, getSpokesSelectorForHub } from './features/spokes/spokesSlice'
 import { useAppSelector } from './app/hooks'
 import { Add } from 'grommet-icons'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { NewSpokeDialog } from './NewSpokeDialog'
 import { SpokeListSecondary } from './SpokeListSecondary'
 
@@ -29,12 +29,14 @@ export const SpokeList = ({ hubName, ...props }: SpokeListProps) => {
     showNewSpokeDialog()
   }
 
+  const size = useContext(ResponsiveContext)
+
   return <>
     <NewSpokeDialog hubName={hubName} spokeName={spokeToEdit} visible={newSpokeVisible} onPositive={hideNewSpokeDialog} onNegative={hideNewSpokeDialog} />
     <Box {...props} gap='medium' align='center'>
       <Heading margin='none' alignSelf='center' level='3'>Spokes</Heading>
       {spokes.length > 0 ? <List<Spoke>
-        primaryKey='name'
+        primaryKey={spoke => <Box key={'!name ' + spoke.name} width={size === 'small' ? '100px' : undefined}><Text  truncate>{spoke.name}</Text></Box>}
         itemKey={idForSpoke}
         secondaryKey={spoke => <SpokeListSecondary key={spoke.name} spoke={spoke} onEdit={editSpoke} />}
         data={spokes}

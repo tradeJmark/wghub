@@ -90,7 +90,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
 
   const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<KeyOfType<Hub, string>>) => {
     return <TruncatableTag
-      limit={30}
+      limit={size === 'small' ? 20 : 30}
       name={displayName}
       value={hub[name] || '<empty>'}
       onClick={() => setEditField(name, displayName, editPlaceholder, inputValidation, inputFinalize)}
@@ -185,9 +185,10 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
             <SpokeList margin={{top: 'medium'}} hubName={hub.name} />
           </Box>
         </CardBody>
-        <CardFooter justify='end'>
+        <CardFooter justify={size === 'small' ? 'center' : 'end'}>
           <RoundedButton 
             primary
+            label={size === 'small' ? 'Download' : undefined}
             download={validFile ? `${hub.name}.conf` : undefined}
             icon={<Download />}
             href={validFile ? downloadLink : undefined}

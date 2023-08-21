@@ -53,7 +53,7 @@ export const NewSpokeDialog = ({ hubName, spokeName, onDone, ...props }: NewSpok
     {...props}
   >
     <FormField label='Name' name='name' required validate={() => isDuplicateSpoke ? "This name is already in use." : undefined}>
-      <TextInput name='name' autoFocus placeholder='Human-readable name' disabled={editing} />
+      <TextInput name='name' autoFocus autoCapitalize='off' placeholder='Human-readable name' disabled={editing} />
     </FormField>
     <FormField
       label='IP Address'
@@ -65,10 +65,10 @@ export const NewSpokeDialog = ({ hubName, spokeName, onDone, ...props }: NewSpok
       }}
       validateOn="blur"
     >
-      <TextInput name='ipAddress' placeholder="x.x.x.x" />
+      <TextInput name='ipAddress' autoCapitalize='off' placeholder="x.x.x.x" />
     </FormField>
     <FormField name='publicKey' label='Public Key'>
-      <TextInput name='publicKey' placeholder='(or specify later)' />
+      <TextInput name='publicKey' autoCapitalize='off' placeholder='(or specify later)' />
     </FormField>
   </Dialog>
 }

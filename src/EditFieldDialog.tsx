@@ -67,7 +67,7 @@ export const EditFieldDialog = ({
     {...props}
   >
     <FormField label={fieldDisplayName} name='newValue' validate={validation} required={array ? {indicator: false} : false}>
-      <TextInput name='newValue' autoFocus placeholder={placeholder} />
+      <TextInput name='newValue' autoFocus autoCapitalize='off' placeholder={placeholder} />
     </FormField>
   </Dialog>
 }
