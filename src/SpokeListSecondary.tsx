@@ -16,10 +16,10 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
   const hub = useAppSelector(state => state.hubs.entities[spoke.hub])
   const [downloadUrl, setDownloadUrl] = useState<string>(null)
   useEffect(() => {
-    if (Boolean(hub.publicKey) && Boolean(hub.endpoint) && Boolean(spoke.publicKey)) {
+    if (Boolean(hub.publicKey) && Boolean(hub.endpoint)) {
       const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
       const hubData = new HubData(hub.publicKey, hub.ipAddress ?? '', endpointAddress, endpointPort)
-      const spokeData = new SpokeData(spoke.ipAddress, spoke.publicKey)
+      const spokeData = new SpokeData(spoke.ipAddress, spoke.publicKey ?? '')
       const common = new SpokeCommonData(hub.dnsServers, hub.searchDomains, hub.allowedIPs)
       const config = new SpokeConfig(hubData, spokeData, common)
       const blob = generateSpokeConfigFile(config)

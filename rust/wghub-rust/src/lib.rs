@@ -2,6 +2,8 @@ pub mod model;
 
 use model::{HubData, HubConfig, SpokeData, SpokeCommonData, SpokeConfig};
 
+static PRIV: &str = "privprivprivprivprivprivprivprivprivpriv000=";
+
 pub fn create_hub_config_file(config: &HubConfig) -> String {
   let interface = generate_hub_interface(&config.hub);
   let peers = config.spokes.iter()
@@ -21,7 +23,7 @@ fn generate_hub_interface(data: &HubData) -> String {
   let lines = [
     "[Interface]".to_string(),
     format!("Address = {}/24", data.ip_address),
-    "PrivateKey = #!priv!".to_string(),
+    format!("PrivateKey = {PRIV}"),
     format!("ListenPort = {}", data.endpoint_port)
   ];
   lines.join("\n")
@@ -34,7 +36,7 @@ fn generate_spoke_interface(data: &SpokeData, common: &SpokeCommonData) -> Strin
   let mut  lines = vec![
     "[Interface]".to_string(),
     format!("Address = {}/32", data.ip_address),
-    "PrivateKey = #!priv!".to_string()
+    format!("PrivateKey = {PRIV}")
   ];
   if dns_string.len() > 0 {
     lines.push(format!("DNS = {dns_string}"));
