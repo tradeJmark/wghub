@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit"
 import hubsReducer from "../features/hubs/hubsSlice"
+import spokesReducer from '../features/spokes/spokesSlice'
 
 export const store = configureStore({
     reducer: {
-        hubs: hubsReducer
+        hubs: hubsReducer,
+        spokes: spokesReducer
     }
 })
 

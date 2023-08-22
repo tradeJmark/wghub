@@ -1,0 +1,7 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "rust/wghub-rust/Cargo.toml",
+        "rust/wghub-rust-web/Cargo.toml"
+    ],
+    "editor.tabSize": 2
+}

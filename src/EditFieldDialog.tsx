@@ -1,24 +1,23 @@
-import { Box, Form, FormField, Layer, LayerExtendedProps, TextInput } from 'grommet'
-import { useState } from 'react'
+import { FormField, TextInput } from 'grommet'
+import { useCallback, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from './app/hooks'
 import { addArrayItem, editHub } from './features/hubs/hubsSlice'
-import { SubmitOrCancel } from './SubmitOrCancel'
 import { Hub } from './model/Hub'
 import { KeyOfType } from './util'
+import { Dialog, DialogProps } from './Dialog'
 
-interface EditFieldDialogProps extends LayerExtendedProps {
+interface EditFieldDialogProps extends DialogProps<FormData> {
   hubName: string,
   fieldName: keyof Hub
   fieldDisplayName: string
   placeholder?: string
   array?: boolean
-  index?: number
-  onCancel?(): void
-  onSubmit?(): void
+  validation?: { regexp: RegExp, message?: string }
+  finalize?: (newValue: string) => string
 }
 
 interface FormData {
-  newValue?: string
+  newValue: string
 }
 
 export const EditFieldDialog = ({
@@ -27,43 +26,48 @@ export const EditFieldDialog = ({
   fieldDisplayName,
   placeholder,
   array,
-  onCancel,
-  onSubmit,
+  layerProps,
+  onDone,
+  validation,
+  finalize,
   ...props
 }: EditFieldDialogProps) => {
-  const [formData, setFormData] = useState<FormData>({})
   const dispatch = useAppDispatch()
   const hub = useAppSelector(state => state.hubs.entities[hubName])
+  const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as KeyOfType<Hub, string>] ?? ''}), [hub, fieldName, array])
+  const [formData, setFormData] = useState<FormData>(getDefaultValue())
+  useEffect(() => {
+    setFormData(getDefaultValue())
+  }, [getDefaultValue])
 
-  return <Layer responsive={false} {...props}>
-    <Box pad='medium'>
-      <Form 
-        value={formData}
-        onChange={newData => setFormData(newData)}
-        onSubmit={({ value }) => {
-          if (array) {
-            const arrayName = fieldName as KeyOfType<Hub, string[]>
-            dispatch(addArrayItem({hubName: hub.name, arrayName, arrayValue: value.newValue}))
-          }
-          else {
-            const update = {
-              id: hub.name,
-              changes: {[fieldName]: value.newValue}
-            }
-            dispatch(editHub(update))
-         }
-          onSubmit()
-        }}
-      >
-        <FormField label={fieldDisplayName}>
-          <TextInput name="newValue" autoFocus placeholder={placeholder} defaultValue={array ? null : hub[fieldName]} />
-        </FormField>
-        <SubmitOrCancel 
-            margin={{top: 'medium'}}
-            onCancel={onCancel}
-            submitLabel={array ? 'Add' : 'Update'}
-          />
-      </Form>
-    </Box>
-  </Layer>
+  return <Dialog 
+    layerProps={{responsive: false, ...layerProps}}
+    value={formData}
+    onChange={setFormData}
+    validate='submit'
+    positiveButtonText={array ? 'Add' : 'Update'}
+    onSubmit={({ value }) => {
+      const finalizedValue = finalize?.(value.newValue) ?? value.newValue
+      if (array) {
+        const arrayName = fieldName as KeyOfType<Hub, string[]>
+        dispatch(addArrayItem({hubName: hub.name, arrayName, arrayValue: finalizedValue}))
+      }
+      else {
+        const update = {
+          id: hub.name,
+          changes: {[fieldName]: finalizedValue}
+        }
+        dispatch(editHub(update))
+      }
+    }}
+    onDone={() => {
+      onDone?.()
+      setFormData({newValue: ''})
+    }}
+    {...props}
+  >
+    <FormField label={fieldDisplayName} name='newValue' validate={validation} required={array ? {indicator: false} : false}>
+      <TextInput name='newValue' autoFocus autoCapitalize='off' placeholder={placeholder} />
+    </FormField>
+  </Dialog>
 }

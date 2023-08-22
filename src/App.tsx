@@ -1,12 +1,14 @@
-import { grommet, Select, Box, Button, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext} from 'grommet'
+import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext } from 'grommet'
 import { deepMerge } from 'grommet/utils'
-import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from './app/hooks';
-import NewHubDialog from './NewHubDialog';
+import { useEffect, useState } from 'react';
+import { useAppSelector } from './app/hooks';
+import { NewHubDialog } from './NewHubDialog';
 import { HubDisplay } from './HubDisplay';
 import { Add } from 'grommet-icons';
 import { FloatingActionButton } from './FloatingActionButton';
 import { Warning } from './Warning';
+import initRust from 'wghub-rust-web'
+import { ImpExpFooter } from './ImpExpFooter';
 
 const theme = deepMerge(grommet, {
   global: {
@@ -24,6 +26,11 @@ const theme = deepMerge(grommet, {
     icons: {
       color: 'brand'
     }
+  },
+  formField: {
+    label: {
+      requiredIndicator: true
+    }
   }
 })
 
@@ -40,6 +47,7 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
       background="brand"
       pad='small'
       elevation="medium"
+      justify='around'
       {...props}
     >
       {children}
@@ -47,30 +55,34 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
   </ThemeContext.Extend>
 )
 
-function App() {
+export const App = () => {
+  useEffect(() => {
+    const init = async () => { await initRust() }
+    init()
+    return () => {}
+  })
+
   const [newHubVisible, setNewHubVisible] = useState(false)
   const showNewHub = () => setNewHubVisible(true)
   const closeNewHub = () => setNewHubVisible(false)
-  const hubNames = useAppSelector(state => state.hubs.ids.map(name => name.valueOf() as string))
+  const hubNames = useAppSelector(state => state.hubs.ids)
   return (
     <Grommet theme={theme} full>
-      {newHubVisible && <NewHubDialog 
-        onSubmit={closeNewHub}
-        onEsc={closeNewHub}
-        onCancel={closeNewHub}
-        onClickOutside={closeNewHub}
-      />}
+      <NewHubDialog
+        visible={newHubVisible}
+        onDone={closeNewHub}
+      />
       <Page>
         <AppBar>
           <Text textAlign='center' size="xxlarge"><strong>WGHub</strong></Text>
         </AppBar>
         <PageContent pad='medium' align='center'>
           <Box gap='medium'>
-          {hubNames.length == 0 && <Warning>No hubs available, create one to begin.</Warning>}
+          {hubNames.length === 0 && <Warning>No hubs available, create one to begin.</Warning>}
           {hubNames.map(hubName => {
             return <HubDisplay
               key={hubName}
-              hubName={hubName}
+              hubName={hubName.valueOf() as string}
             />
           })}
           </Box>
@@ -81,8 +93,7 @@ function App() {
         icon={<Add />}
         onClick={showNewHub}
       />
+      <ImpExpFooter showExport={hubNames.length > 0} />
     </Grommet>
   );
 }
-
-export default App;

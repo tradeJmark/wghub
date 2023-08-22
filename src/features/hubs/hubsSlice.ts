@@ -45,7 +45,8 @@ const hubsSlice = createSlice({
     },
     collapseHub: (state, { payload }: PayloadAction<string>) => {
       state.expanded[payload] = false
-    }
+    },
+    importHubs: hubsAdapter.addMany
   }
 })
 
@@ -55,6 +56,6 @@ export const selectIsDuplicate = createSelector(
   (ids, candidate) => ids.includes(candidate)
 )
 
-export const { newHub, deleteHub, editHub, expandHub, collapseHub, addArrayItem, removeArrayItem, submitCandidateName } = hubsSlice.actions
+export const { newHub, deleteHub, editHub, expandHub, collapseHub, addArrayItem, removeArrayItem, submitCandidateName, importHubs } = hubsSlice.actions
 
 export default hubsSlice.reducer
