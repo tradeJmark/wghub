@@ -3,6 +3,10 @@ use wasm_bindgen::prelude::*;
 use web_sys::Blob;
 use wghub_rust::{model::{HubConfig, SpokeData, HubData, SpokeConfig, SpokeCommonData}, create_hub_config_file, create_spoke_config_file};
 
+//All of these wrapper classes will be able to go away once wasm-bindgen
+//merges in https://github.com/rustwasm/wasm-bindgen/pull/3554 to allow
+//Vecs of Strings and bound custom types.
+
 pub fn zip_spoke_data(spoke_ip_addresses: Vec<JsString>, spoke_public_keys: Vec<JsString>) -> Vec<SpokeData> {
   spoke_ip_addresses.iter()
     .zip(spoke_public_keys.iter())

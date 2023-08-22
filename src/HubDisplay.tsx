@@ -73,6 +73,8 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
     const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
     const hubData = new HubData(hub.publicKey ?? '', hub.ipAddress, endpointAddress, endpointPort)
     const spokeData = spokes.map(spoke => new SpokeData(spoke.ipAddress, spoke.publicKey))
+    //Will be able to cut this line and use spokeData directly once wasm-bindgen merges
+    //https://github.com/rustwasm/wasm-bindgen/pull/3554 and the Rust code is updated.
     const [spokeIpAddresses, spokePublicKeys] = unzip(spokeData.map(data => [data.ip_address, data.public_key]))
     return new HubConfig(hub.name, hubData, spokeIpAddresses, spokePublicKeys)
   }
