@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  wghub:
+    container_name: wghub
+    build:
+      context: .
+    ports:
+      - "8080:80"
