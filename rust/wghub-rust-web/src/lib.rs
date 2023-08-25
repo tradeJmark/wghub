@@ -1,3 +1,5 @@
+pub mod ws;
+
 use js_sys::{JsString, Array};
 use wasm_bindgen::prelude::*;
 use web_sys::Blob;
