@@ -3,7 +3,7 @@ pub mod ws;
 use js_sys::{JsString, Array};
 use wasm_bindgen::prelude::*;
 use web_sys::Blob;
-use wghub_rust::{model::{HubConfig, SpokeData, HubData, SpokeConfig, SpokeCommonData}, create_hub_config_file, create_spoke_config_file};
+use wghub_rust::{model::config::{HubConfig, SpokeData, HubData, SpokeConfig, SpokeCommonData}, create_hub_config_file, create_spoke_config_file};
 
 //All of these wrapper classes will be able to go away once wasm-bindgen
 //merges in https://github.com/rustwasm/wasm-bindgen/pull/3554 to allow

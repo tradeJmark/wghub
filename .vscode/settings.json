@@ -4,5 +4,6 @@
         "rust/wghub-rust-web/Cargo.toml",
         "rust/wghub-backend/Cargo.toml"
     ],
-    "editor.tabSize": 2
+    "editor.tabSize": 2,
+    "rust-analyzer.cargo.features": "all"
 }
