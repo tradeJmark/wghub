@@ -1,6 +1,6 @@
 pub mod model;
 
-use model::{HubData, HubConfig, SpokeData, SpokeCommonData, SpokeConfig};
+use model::config::{HubData, HubConfig, SpokeData, SpokeCommonData, SpokeConfig};
 
 static PRIV: &str = "privprivprivprivprivprivprivprivprivpriv000=";
 

@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.6.20", features = ["ws"] }
 tokio = { version = "1.32.0", features = ["full"] }
+wghub-rust = { path = "../wghub-rust", features = ["axum"] }

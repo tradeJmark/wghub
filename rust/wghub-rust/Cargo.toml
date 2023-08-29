@@ -5,6 +5,10 @@ edition = "2021"
 
 [features]
 wasm = ["dep:wasm-bindgen"]
+axum = ["dep:axum"]
 
 [dependencies]
 wasm-bindgen = { version = "0.2.84", optional = true }
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = { version = "1.0.105" }
+axum = { version = "0.6.20", features = ["ws"], optional = true }
