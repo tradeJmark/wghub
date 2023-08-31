@@ -10,6 +10,7 @@ import { SpokeList } from './SpokeList'
 import { HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
 import { getEnabledSpokesForHub } from './features/spokes/spokesSlice'
 import { RoundedButton, TruncatableTag } from './ui-util'
+import { AppContext } from './AppContext'
 
 interface HubEditData {
   fieldName?: keyof Hub
@@ -37,6 +38,7 @@ export interface HubDisplayProps extends BoxExtendedProps {
 }
 
 export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
+  const ctx = useContext(AppContext)
   const [editField, _setEditField] = useState<HubEditData>(null)
   const setEditField = (
     name: keyof Hub,
@@ -67,7 +69,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   const dispatch = useAppDispatch()
   const expand = () => dispatch(expandHub(hub.name))
   const collapse = () => dispatch(collapseHub(hub.name))
-  const del = () => dispatch(deleteHub(hub.name))
+  const del = () => dispatch(deleteHub(ctx.server, hub.name))
 
   const getHubConfig = () => {
     const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
@@ -111,7 +113,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
           return <Box pad='xsmall' key={value}>
             <Tag
               value={value}
-              onRemove={() => dispatch(removeArrayItem({hubName: hub.name, arrayName: name, arrayValue: value}))}
+              onRemove={() => dispatch(removeArrayItem(ctx.server, {hubName: hub.name, arrayName: name, arrayValue: value}))}
             />
           </Box>
         })}

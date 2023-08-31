@@ -1,9 +1,10 @@
 import { FormField, TextInput } from "grommet"
-import { useState } from "react"
+import { useContext, useState } from "react"
 import { Hub } from "./model/Hub"
 import { expandHub, newHub, selectIsDuplicate, submitCandidateName } from "./features/hubs/hubsSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Dialog, DialogProps } from "./Dialog"
+import { AppContext } from "./AppContext"
 
 interface FormData {
   name: string,
@@ -19,6 +20,7 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
     dispatch(submitCandidateName(newtData.name))
     _setFormData(newtData)
   }
+  const ctx = useContext(AppContext)
   const submitData = (formData: FormData) => {
     const hub: Hub = { 
       name: formData.name, 
@@ -27,7 +29,7 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
       searchDomains: [],
       allowedIPs: []
     }
-    dispatch(newHub(hub))
+    dispatch(newHub(ctx.server, hub))
     dispatch(expandHub(hub.name))
   }
   const isDuplicate = useAppSelector(selectIsDuplicate)

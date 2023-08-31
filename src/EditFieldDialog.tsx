@@ -1,10 +1,11 @@
 import { FormField, TextInput } from 'grommet'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from './app/hooks'
 import { addArrayItem, editHub } from './features/hubs/hubsSlice'
 import { Hub } from './model/Hub'
 import { KeyOfType } from './util'
 import { Dialog, DialogProps } from './Dialog'
+import { AppContext } from './AppContext'
 
 interface EditFieldDialogProps extends DialogProps<FormData> {
   hubName: string,
@@ -32,6 +33,7 @@ export const EditFieldDialog = ({
   finalize,
   ...props
 }: EditFieldDialogProps) => {
+  const ctx = useContext(AppContext)
   const dispatch = useAppDispatch()
   const hub = useAppSelector(state => state.hubs.entities[hubName])
   const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as KeyOfType<Hub, string>] ?? ''}), [hub, fieldName, array])
@@ -50,14 +52,14 @@ export const EditFieldDialog = ({
       const finalizedValue = finalize?.(value.newValue) ?? value.newValue
       if (array) {
         const arrayName = fieldName as KeyOfType<Hub, string[]>
-        dispatch(addArrayItem({hubName: hub.name, arrayName, arrayValue: finalizedValue}))
+        dispatch(addArrayItem(ctx.server, {hubName: hub.name, arrayName, arrayValue: finalizedValue}))
       }
       else {
         const update = {
           id: hub.name,
           changes: {[fieldName]: finalizedValue}
         }
-        dispatch(editHub(update))
+        dispatch(editHub(ctx.server, update))
       }
     }}
     onDone={() => {

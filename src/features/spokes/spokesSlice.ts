@@ -1,6 +1,7 @@
 import { PayloadAction, createEntityAdapter, createSelector, createSlice } from "@reduxjs/toolkit"
-import { Spoke, genSpokeId, idForSpoke } from '../../model/Spoke'
-import { RootState } from "../../app/store"
+import { Spoke, SpokeID, genSpokeId, idForSpoke } from '../../model/Spoke'
+import { AppThunk, RootState } from "../../app/store"
+import { ServerContext } from "wghub-rust-web"
 
 const spokesAdapter = createEntityAdapter<Spoke>({
   selectId: idForSpoke
@@ -16,7 +17,7 @@ const spokesSlice = createSlice({
   reducers: {
     setSpoke: spokesAdapter.upsertOne,
     deleteSpoke: spokesAdapter.removeOne,
-    toggleDisableSpoke: (state, { payload }: PayloadAction<string>) => {
+    toggleSpokeDisabled: (state, { payload }: PayloadAction<string>) => {
       state.entities[payload].disabled = !state.entities[payload].disabled
     },
     submitCandidateName: (state, { payload }: PayloadAction<string>) => {
@@ -25,6 +26,29 @@ const spokesSlice = createSlice({
     importSpokes: spokesAdapter.addMany
   }
 })
+
+type SpokeThunkCreator<T> = (ctx: ServerContext, value: T) => AppThunk
+
+export const setSpoke: SpokeThunkCreator<Spoke> = (ctx, spoke) => {
+  return dispatch => {
+    dispatch(spokesSlice.actions.setSpoke(spoke))
+    ctx?.upsertSpoke(spoke)
+  }
+}
+
+export const deleteSpoke: SpokeThunkCreator<SpokeID> = (ctx, id) => {
+  return dispatch => {
+    dispatch(spokesSlice.actions.deleteSpoke(genSpokeId(id)))
+    ctx?.deleteSpoke(id.hubName, id.spokeName);
+  }
+}
+
+export const toggleSpokeDisabled: SpokeThunkCreator<SpokeID> = (ctx, id) => {
+  return dispatch => {
+    dispatch(spokesSlice.actions.toggleSpokeDisabled(genSpokeId(id)))
+    ctx?.toggleSpokeDisabled(id.hubName, id.spokeName)
+  }
+}
 
 export const getSpokesSelectorForHub = (hubName: string) => {
   return createSelector(
@@ -48,11 +72,11 @@ export const getEnabledSpokesForHub = (hubName: string) => {
 }
 
 export const getSelectIsDuplicateSpokeForHub = (hubName: string) => createSelector(
-  (state: RootState) => genSpokeId(hubName, state.spokes.candidateName),
+  (state: RootState) => genSpokeId({hubName, spokeName: state.spokes.candidateName}),
   (state: RootState) => state.spokes.ids,
   (candidateHash, names) => names.includes(candidateHash)
 )
 
-export const { setSpoke, deleteSpoke, toggleDisableSpoke, submitCandidateName, importSpokes } = spokesSlice.actions
+export const { submitCandidateName, importSpokes } = spokesSlice.actions
 
 export default spokesSlice.reducer

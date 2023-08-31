@@ -1,10 +1,11 @@
 import { FormField, TextInput } from "grommet"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useContext, useEffect, useState } from "react"
 import { setSpoke, submitCandidateName, getSelectIsDuplicateSpokeForHub } from "./features/spokes/spokesSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Dialog, DialogProps } from "./Dialog"
 import { genSpokeId, newSpoke } from "./model/Spoke"
 import { ipv4RegExp } from "./util"
+import { AppContext } from "./AppContext"
 
 interface FormData {
   name: string
@@ -20,9 +21,10 @@ interface NewSpokeDialogProps extends DialogProps<FormData> {
 }
 
 export const NewSpokeDialog = ({ hubName, spokeName, onDone, ...props }: NewSpokeDialogProps)  => {
+  const ctx = useContext(AppContext)
   const dispatch = useAppDispatch()
   const editing = Boolean(spokeName)
-  const spoke = useAppSelector(state => state.spokes.entities[genSpokeId(hubName, spokeName)])
+  const spoke = useAppSelector(state => state.spokes.entities[genSpokeId({hubName, spokeName})])
   const defaultFormData: () => FormData = useCallback(() => {
     return editing ?
       {name: spoke.name, ipAddress: spoke.ipAddress, publicKey: spoke.publicKey ?? ''}
@@ -36,7 +38,7 @@ export const NewSpokeDialog = ({ hubName, spokeName, onDone, ...props }: NewSpok
   }
   const submitData = (formData: FormData) => {
     const spoke = newSpoke(hubName, formData.name, formData.ipAddress, formData.publicKey)
-    dispatch(setSpoke(spoke))
+    dispatch(setSpoke(ctx.server, spoke))
   }
   const isDuplicateSpoke = useAppSelector(getSelectIsDuplicateSpokeForHub(hubName))
 

@@ -62,6 +62,10 @@ fn unwrap_all(strings: Vec<JsString>) -> Vec<String> {
   strings.iter().map(|s| s.into()).collect()
 }
 
+fn wrap_all(strings: Vec<String>) -> Vec<JsString> {
+  strings.into_iter().map(|s| s.into()).collect()
+}
+
 fn blobbify(s: String) -> Blob {
   let array = Array::of1(&s.into());
   Blob::new_with_str_sequence(&array).unwrap()

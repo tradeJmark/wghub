@@ -1,7 +1,11 @@
 import { hash } from "ohash"
 
-export const genSpokeId = (hub: string, name: string): string => hash({hub, name})
-export const idForSpoke = (spoke: Spoke) => genSpokeId(spoke.hub, spoke.name)
+
+export type SpokeID = {hubName: string, spokeName: string}
+
+export const genSpokeId = (id: SpokeID): string => hash(id)
+export const idForSpoke = (spoke: Spoke): string => genSpokeId({hubName: spoke.hub, spokeName: spoke.name})
+export const idFromSpoke = (spoke: Spoke): SpokeID => ({spokeName: spoke.name, hubName: spoke.hub})
 
 export interface Spoke {
   hub: string

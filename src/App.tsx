@@ -1,14 +1,14 @@
 import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext } from 'grommet'
 import { deepMerge } from 'grommet/utils'
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useAppSelector } from './app/hooks';
 import { NewHubDialog } from './NewHubDialog';
 import { HubDisplay } from './HubDisplay';
 import { Add } from 'grommet-icons';
 import { FloatingActionButton } from './FloatingActionButton';
 import { Warning } from './Warning';
-import initRust, { startWebSocket } from 'wghub-rust-web'
 import { ImpExpFooter } from './ImpExpFooter';
+import { AppContext } from './AppContext';
 
 const theme = deepMerge(grommet, {
   global: {
@@ -56,13 +56,14 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
 )
 
 export const backend = process.env['NODE_ENV'] === 'development' ? process.env['REACT_APP_WGHUB_BACKEND'] : null
-initRust().then(() => startWebSocket())
 
 export const App = () => {
   const [newHubVisible, setNewHubVisible] = useState(false)
   const showNewHub = () => setNewHubVisible(true)
   const closeNewHub = () => setNewHubVisible(false)
   const hubNames = useAppSelector(state => state.hubs.ids)
+  const ctx = useContext(AppContext)
+  useEffect(() => { ctx.server?.requestData() }, [ctx])
   return (
     <Grommet theme={theme} full>
       <NewHubDialog
