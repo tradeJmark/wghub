@@ -1,9 +1,10 @@
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Hub {
   pub name: String,
   pub description: Option<String>,
+  pub public_key: Option<String>,
   pub endpoint: Option<String>,
   pub ip_address: Option<String>,
   pub dns_servers: Vec<String>,
@@ -15,6 +16,7 @@ impl Hub {
   pub fn new(
     name: String,
     description: Option<String>,
+    public_key: Option<String>,
     endpoint: Option<String>,
     ip_address: Option<String>,
     dns_servers: Option<Vec<String>>,
@@ -24,6 +26,7 @@ impl Hub {
     Hub {
       name,
       description,
+      public_key,
       endpoint,
       ip_address,
       dns_servers: dns_servers.unwrap_or(Vec::default()),
@@ -32,6 +35,6 @@ impl Hub {
     }
   }
   pub fn new_bare(name: String, description: Option<String>) -> Hub {
-    Self::new(name, description, None, None, None, None, None)
+    Self::new(name, description, None, None, None, None, None, None)
   }
 }

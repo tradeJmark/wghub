@@ -1,7 +1,8 @@
-import { createEntityAdapter, createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { createEntityAdapter, createSelector, createSlice, PayloadAction, Update } from "@reduxjs/toolkit"
 import { Hub } from "../../model/Hub"
-import { RootState } from "../../app/store"
+import { AppThunk, RootState } from "../../app/store"
 import { KeyOfType } from "../../util"
+import { ServerContext } from "wghub-rust-web"
 
 export interface ArrayItem {
   hubName: string
@@ -50,12 +51,52 @@ const hubsSlice = createSlice({
   }
 })
 
+type HubThunkCreator<T> = (ctx: ServerContext, value: T) => AppThunk
+
+export const newHub: HubThunkCreator<Hub> = (ctx, hub) => {
+  return dispatch => {
+    dispatch(hubsSlice.actions.newHub(hub))
+    ctx?.upsertHub(hub)
+  }
+}
+
+export const deleteHub: HubThunkCreator<string> = (ctx, hubName) => {
+  return dispatch => {
+    dispatch(hubsSlice.actions.deleteHub(hubName))
+    ctx?.deleteHub(hubName)
+  }
+}
+
+export const editHub: HubThunkCreator<Update<Hub>> = (ctx, update) => {
+  return (dispatch, getState) => {
+    dispatch(hubsSlice.actions.editHub(update))
+    const hub = getState().hubs.entities[update.id]
+    ctx?.upsertHub(hub)
+  }
+}
+
+export const addArrayItem: HubThunkCreator<ArrayItem> = (ctx, item) => {
+  return (dispatch, getState) => {
+    dispatch(hubsSlice.actions.addArrayItem(item))
+    const hub = getState().hubs.entities[item.hubName]
+    ctx?.upsertHub(hub)
+  }
+}
+
+export const removeArrayItem: HubThunkCreator<ArrayItem> = (ctx, item) => {
+  return (dispatch, getState) => {
+    dispatch(hubsSlice.actions.removeArrayItem(item))
+    const hub = getState().hubs.entities[item.hubName]
+    ctx?.upsertHub(hub)
+  }
+}
+
 export const selectIsDuplicate = createSelector(
   (state: RootState) => state.hubs.ids.map(id => id.valueOf()),
   (state: RootState) => state.hubs.candidateName,
   (ids, candidate) => ids.includes(candidate)
 )
 
-export const { newHub, deleteHub, editHub, expandHub, collapseHub, addArrayItem, removeArrayItem, submitCandidateName, importHubs } = hubsSlice.actions
+export const { expandHub, collapseHub, submitCandidateName, importHubs } = hubsSlice.actions
 
 export default hubsSlice.reducer
