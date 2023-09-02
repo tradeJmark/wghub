@@ -56,11 +56,11 @@ pub fn generate_spoke_config_file(config: &SpokeConfigWrapper) -> Blob {
   create_spoke_config_file(&config.0).blobbify()
 }
 
-trait AllInto<T: Into<R>, R> {
+trait AllInto<R> {
   fn all_into(self) -> Vec<R>;
 }
 
-impl<C, R> AllInto<C::Item, R> for C where
+impl<C, R> AllInto<R> for C where
   C: IntoIterator,
   C::Item: Into<R>
 {
