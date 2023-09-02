@@ -37,7 +37,7 @@ pub struct SpokeCommonDataWrapper(SpokeCommonData);
 impl SpokeCommonDataWrapper {
   #[wasm_bindgen(constructor)]
   pub fn new(dns_servers: Vec<JsString>, search_domains: Vec<JsString>, allowed_ips: Vec<JsString>) -> SpokeCommonDataWrapper {
-    SpokeCommonDataWrapper(SpokeCommonData {dns_servers: dns_servers.unwrap_all(), search_domains: search_domains.unwrap_all(), allowed_ips: allowed_ips.unwrap_all()})
+    SpokeCommonDataWrapper(SpokeCommonData {dns_servers: dns_servers.all_into(), search_domains: search_domains.all_into(), allowed_ips: allowed_ips.all_into()})
   }
 }
 
@@ -56,22 +56,18 @@ pub fn generate_spoke_config_file(config: &SpokeConfigWrapper) -> Blob {
   create_spoke_config_file(&config.0).blobbify()
 }
 
-trait JsStringCollection {
-  fn unwrap_all(self) -> Vec<String>;
+trait IntoCollection<T: Into<R>, R> {
+  fn all_into(self) -> Vec<R>;
 }
 
-impl JsStringCollection for Vec<JsString> {
-  fn unwrap_all(self) -> Vec<String> {
+impl IntoCollection<JsString, String> for Vec<JsString> {
+  fn all_into(self) -> Vec<String> {
     self.iter().map(|s| s.into()).collect()
   }
 }
 
-trait JsStringableCollection {
-  fn wrap_all(self) -> Vec<JsString>;
-}
-
-impl JsStringableCollection for Vec<String> {
-  fn wrap_all(self) -> Vec<JsString> {
+impl IntoCollection<String, JsString> for Vec<String> {
+  fn all_into(self) -> Vec<JsString> {
     self.into_iter().map(|s| s.into()).collect()
   }
 }

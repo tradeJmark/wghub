@@ -7,7 +7,7 @@ use ws_stream_wasm::{WsMeta, WsStream, WsMessage};
 use futures_util::{SinkExt, StreamExt, stream::SplitSink, lock::Mutex};
 use wghub_rust::model::{message::{ClientMessage, ServerMessage, WGHubMessage}, SpokeID};
 
-use crate::{JsStringableCollection, JsStringCollection};
+use crate::IntoCollection;
 
 #[wasm_bindgen(module = "redux")]
 extern "C" {
@@ -59,18 +59,18 @@ extern "C" {
 
 impl Into<wghub_rust::model::Hub> for Hub {
   fn into(self) -> wghub_rust::model::Hub {
-    let dns_servers = Some(self.dns_servers().unwrap_all());
-    let search_domains = Some(self.search_domains().unwrap_all());
-    let allowed_ips = Some(self.allowed_ips().unwrap_all());
+    let dns_servers = Some(self.dns_servers().all_into());
+    let search_domains = Some(self.search_domains().all_into());
+    let allowed_ips = Some(self.allowed_ips().all_into());
     wghub_rust::model::Hub::new(self.name(), self.description(), self.public_key(), self.endpoint(), self.ip_address(), dns_servers, search_domains, allowed_ips)
   }
 }
 
 impl From<wghub_rust::model::Hub> for Hub {
   fn from(value: wghub_rust::model::Hub) -> Self {
-    let dns_servers = Some(value.dns_servers.wrap_all());
-    let search_domains = Some(value.search_domains.wrap_all());
-    let allowed_ips = Some(value.allowed_ips.wrap_all());
+    let dns_servers = Some(value.dns_servers.all_into());
+    let search_domains = Some(value.search_domains.all_into());
+    let allowed_ips = Some(value.allowed_ips.all_into());
     create_hub(
       value.name,
       value.description,
