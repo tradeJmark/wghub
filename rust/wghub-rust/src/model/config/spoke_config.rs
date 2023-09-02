@@ -1,5 +1,6 @@
 use super::{HubData, SpokeData, SpokeCommonData};
 
+#[derive(Clone)]
 pub struct SpokeConfig {
   pub hub: HubData,
   pub spoke: SpokeData,

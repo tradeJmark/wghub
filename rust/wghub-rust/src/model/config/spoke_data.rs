@@ -2,6 +2,7 @@
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "wasm", wasm_bindgen(getter_with_clone))]
+#[derive(Clone)]
 pub struct SpokeData {
   pub ip_address: String,
   pub public_key: String

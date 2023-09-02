@@ -1,5 +1,6 @@
 use super::{SpokeData, HubData};
 
+#[derive(Clone)]
 pub struct HubConfig {
   pub name: String,
   pub hub: HubData,

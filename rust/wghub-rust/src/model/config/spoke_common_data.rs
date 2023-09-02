@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct SpokeCommonData {
   pub dns_servers: Vec<String>,
   pub search_domains: Vec<String>,

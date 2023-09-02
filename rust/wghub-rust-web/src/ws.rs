@@ -7,7 +7,7 @@ use ws_stream_wasm::{WsMeta, WsStream, WsMessage};
 use futures_util::{SinkExt, StreamExt, stream::SplitSink, lock::Mutex};
 use wghub_rust::model::{message::{ClientMessage, ServerMessage, WGHubMessage}, SpokeID};
 
-use crate::AllInto;
+use crate::utils::AllInto;
 
 #[wasm_bindgen(module = "redux")]
 extern "C" {
