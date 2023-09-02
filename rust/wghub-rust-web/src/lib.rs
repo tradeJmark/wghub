@@ -28,8 +28,7 @@ impl HubConfigWrapper {
 
 #[wasm_bindgen(js_name = "generateHubConfigFile")]
 pub fn generate_hub_config_file(config: &HubConfigWrapper) -> Blob {
-  let string = create_hub_config_file(&config.0);
-  blobbify(string)
+  create_hub_config_file(&config.0).blobbify()
 }
 
 #[wasm_bindgen(js_name = "SpokeCommonData")]
@@ -38,7 +37,7 @@ pub struct SpokeCommonDataWrapper(SpokeCommonData);
 impl SpokeCommonDataWrapper {
   #[wasm_bindgen(constructor)]
   pub fn new(dns_servers: Vec<JsString>, search_domains: Vec<JsString>, allowed_ips: Vec<JsString>) -> SpokeCommonDataWrapper {
-    SpokeCommonDataWrapper(SpokeCommonData {dns_servers: unwrap_all(dns_servers), search_domains: unwrap_all(search_domains), allowed_ips: unwrap_all(allowed_ips.into())})
+    SpokeCommonDataWrapper(SpokeCommonData {dns_servers: dns_servers.unwrap_all(), search_domains: search_domains.unwrap_all(), allowed_ips: allowed_ips.unwrap_all()})
   }
 }
 
@@ -54,19 +53,36 @@ impl SpokeConfigWrapper {
 
 #[wasm_bindgen(js_name = "generateSpokeConfigFile")]
 pub fn generate_spoke_config_file(config: &SpokeConfigWrapper) -> Blob {
-  let string = create_spoke_config_file(&config.0);
-  blobbify(string)
+  create_spoke_config_file(&config.0).blobbify()
 }
 
-fn unwrap_all(strings: Vec<JsString>) -> Vec<String> {
-  strings.iter().map(|s| s.into()).collect()
+trait JsStringCollection {
+  fn unwrap_all(self) -> Vec<String>;
 }
 
-fn wrap_all(strings: Vec<String>) -> Vec<JsString> {
-  strings.into_iter().map(|s| s.into()).collect()
+impl JsStringCollection for Vec<JsString> {
+  fn unwrap_all(self) -> Vec<String> {
+    self.iter().map(|s| s.into()).collect()
+  }
 }
 
-fn blobbify(s: String) -> Blob {
-  let array = Array::of1(&s.into());
-  Blob::new_with_str_sequence(&array).unwrap()
+trait JsStringableCollection {
+  fn wrap_all(self) -> Vec<JsString>;
+}
+
+impl JsStringableCollection for Vec<String> {
+  fn wrap_all(self) -> Vec<JsString> {
+    self.into_iter().map(|s| s.into()).collect()
+  }
+}
+
+trait Blobbable {
+  fn blobbify(self) -> Blob;
+}
+
+impl Blobbable for String {
+  fn blobbify(self) -> Blob {
+    let array = Array::of1(&self.into());
+    Blob::new_with_str_sequence(&array).unwrap()
+  }
 }
