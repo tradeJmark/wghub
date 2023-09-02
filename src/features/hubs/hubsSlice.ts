@@ -1,6 +1,6 @@
-import { createEntityAdapter, createSelector, createSlice, PayloadAction, Update } from "@reduxjs/toolkit"
+import { createEntityAdapter, createSlice, PayloadAction, Update } from "@reduxjs/toolkit"
 import { Hub } from "../../model/Hub"
-import { AppThunk, RootState } from "../../app/store"
+import { AppThunk } from "../../app/store"
 import { KeyOfType } from "../../util"
 import { ServerContext } from "wghub-rust-web"
 
@@ -15,13 +15,10 @@ const hubsAdapter = createEntityAdapter<Hub>({
 })
 
 interface HubState {
-  candidateName?: string
-  duplicate: boolean
   expanded: Record<string, boolean>
 }
 
 const initialState = hubsAdapter.getInitialState<HubState>({
-  duplicate: false,
   expanded: {}
 })
 
@@ -37,9 +34,6 @@ const hubsSlice = createSlice({
     },
     removeArrayItem: (state, { payload: {hubName, arrayName, arrayValue}}: PayloadAction<ArrayItem>) => {
       state.entities[hubName][arrayName] = state.entities[hubName][arrayName].filter(item => item !== arrayValue)
-    },
-    submitCandidateName: (state, { payload }: PayloadAction<string>) => {
-      state.candidateName = payload
     },
     expandHub: (state, { payload }: PayloadAction<string>) => {
       state.expanded[payload] = true
@@ -91,12 +85,6 @@ export const removeArrayItem: HubThunkCreator<ArrayItem> = (ctx, item) => {
   }
 }
 
-export const selectIsDuplicate = createSelector(
-  (state: RootState) => state.hubs.ids.map(id => id.valueOf()),
-  (state: RootState) => state.hubs.candidateName,
-  (ids, candidate) => ids.includes(candidate)
-)
-
-export const { expandHub, collapseHub, submitCandidateName, importHubs } = hubsSlice.actions
+export const { expandHub, collapseHub, importHubs } = hubsSlice.actions
 
 export default hubsSlice.reducer

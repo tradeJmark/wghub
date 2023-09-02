@@ -1,7 +1,7 @@
 import { FormField, TextInput } from "grommet"
 import { useContext, useState } from "react"
 import { Hub } from "./model/Hub"
-import { expandHub, newHub, selectIsDuplicate, submitCandidateName } from "./features/hubs/hubsSlice"
+import { expandHub, newHub } from "./features/hubs/hubsSlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Dialog, DialogProps } from "./Dialog"
 import { AppContext } from "./AppContext"
@@ -15,11 +15,8 @@ const emptyForm = {name: '', description: ''}
 
 export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
   const dispatch = useAppDispatch()
-  const [formData, _setFormData] = useState<FormData>(emptyForm)
-  const setFormData = (newtData: FormData) => {
-    dispatch(submitCandidateName(newtData.name))
-    _setFormData(newtData)
-  }
+  const [formData, setFormData] = useState<FormData>(emptyForm)
+
   const ctx = useContext(AppContext)
   const submitData = (formData: FormData) => {
     const hub: Hub = { 
@@ -32,7 +29,9 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
     dispatch(newHub(ctx.server, hub))
     dispatch(expandHub(hub.name))
   }
-  const isDuplicate = useAppSelector(selectIsDuplicate)
+
+  const hubNames = useAppSelector(state => state.hubs.ids)
+  const isDup = (name: string) => hubNames.includes(name)
 
   return <Dialog
     title='New Hub'
@@ -50,7 +49,7 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
       required
       label='Name'
       name='name'
-      validate={() => isDuplicate ? "This name is already in use." : undefined}
+      validate={() => isDup(formData.name) ? "This name is already in use." : undefined}
     >
       <TextInput name='name' autoFocus autoCapitalize='off' placeholder='e.g. wg0' />
     </FormField>

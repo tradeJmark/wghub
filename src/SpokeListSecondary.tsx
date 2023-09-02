@@ -27,7 +27,8 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
       const blob = generateSpokeConfigFile(config)
       const address = URL.createObjectURL(blob)
       setDownloadUrl(address)
-    } else setDownloadUrl(null)
+    }
+    else setDownloadUrl(null)
   }, [hub, spoke])
 
   return <Box direction='row' justify='between' gap='medium'>
@@ -43,7 +44,7 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
         icon={<Download />}
         pad='xxsmall'
         disabled={!Boolean(downloadUrl)}
-        href={Boolean(downloadUrl) ? downloadUrl : undefined}
+        href={downloadUrl || undefined}
         download={Boolean(downloadUrl) ? `${spoke.name}.conf` : undefined}
       />
       <Button icon={<Edit />} pad='xxsmall' onClick={() => onEdit(spoke)} />

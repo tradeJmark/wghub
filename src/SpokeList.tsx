@@ -1,9 +1,9 @@
 import { Box, BoxExtendedProps, Button, Heading, List, ResponsiveContext, Text } from 'grommet'
 import { Spoke, idForSpoke } from './model/Spoke'
-import { getDisabledSpokesForHub, getSpokesSelectorForHub } from './features/spokes/spokesSlice'
+import { getSpokesForHubSelector } from './features/spokes/spokesSlice'
 import { useAppSelector } from './app/hooks'
 import { Add } from 'grommet-icons'
-import { useContext, useState } from 'react'
+import { useContext, useMemo, useState } from 'react'
 import { NewSpokeDialog } from './NewSpokeDialog'
 import { SpokeListSecondary } from './SpokeListSecondary'
 
@@ -12,8 +12,8 @@ export interface SpokeListProps extends BoxExtendedProps {
 }
 
 export const SpokeList = ({ hubName, ...props }: SpokeListProps) => {
-  const spokes = useAppSelector(getSpokesSelectorForHub(hubName))
-  const disabled = useAppSelector(getDisabledSpokesForHub(hubName))
+  const spokeSelector = useMemo(getSpokesForHubSelector, [])
+  const spokes = useAppSelector(state => spokeSelector(state, hubName))
 
   const [spokeToEdit, setEditSpoke] = useState<string>(undefined)
 
@@ -40,7 +40,7 @@ export const SpokeList = ({ hubName, ...props }: SpokeListProps) => {
         itemKey={idForSpoke}
         secondaryKey={spoke => <SpokeListSecondary key={spoke.name} spoke={spoke} onEdit={editSpoke} />}
         data={spokes}
-        disabled={disabled}
+        disabled={spokes.filter(spoke => spoke.disabled).map(idForSpoke)}
       /> : <Text>No spokes associated with this hub.</Text>}
       <Button 
         icon={<Add />}

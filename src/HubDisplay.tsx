@@ -1,5 +1,5 @@
 import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardBody, Button, Collapsible, CardFooter, ResponsiveContext } from 'grommet'
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { EditFieldDialog } from './EditFieldDialog'
 import { useAppDispatch, useAppSelector } from './app/hooks'
 import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
@@ -8,9 +8,9 @@ import { Hub, hubSplitEndpoint } from './model/Hub'
 import { KeyOfType, ipv4RegExpOptional, ipv4RegExpPartial, unzip } from './util'
 import { SpokeList } from './SpokeList'
 import { HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
-import { getEnabledSpokesForHub } from './features/spokes/spokesSlice'
 import { RoundedButton, TruncatableTag } from './ui-util'
 import { AppContext } from './AppContext'
+import { getSpokesForHubSelector } from './features/spokes/spokesSlice'
 
 interface HubEditData {
   fieldName?: keyof Hub
@@ -60,35 +60,30 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   const clearEditField = () => _setEditField(null)
 
   const hub = useAppSelector(state => state.hubs.entities[hubName])
-  const validFile = useAppSelector(state => {
-    const hub = state.hubs.entities[hubName]
-    return Boolean(hub.endpoint) && Boolean(hub.ipAddress)
-  })
   const expanded = useAppSelector(state => state.hubs.expanded[hubName])
-  const spokes = useAppSelector(getEnabledSpokesForHub(hubName))
+  const spokesSelector = useMemo(getSpokesForHubSelector, [])
+  const spokes = useAppSelector(state => spokesSelector(state, hubName))
   const dispatch = useAppDispatch()
   const expand = () => dispatch(expandHub(hub.name))
   const collapse = () => dispatch(collapseHub(hub.name))
   const del = () => dispatch(deleteHub(ctx.server, hub.name))
 
-  const getHubConfig = () => {
-    const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
-    const hubData = new HubData(hub.publicKey ?? '', hub.ipAddress, endpointAddress, endpointPort)
-    const spokeData = spokes.map(spoke => new SpokeData(spoke.ipAddress, spoke.publicKey))
-    //Will be able to cut this line and use spokeData directly once wasm-bindgen merges
-    //https://github.com/rustwasm/wasm-bindgen/pull/3554 and the Rust code is updated.
-    const [spokeIpAddresses, spokePublicKeys] = unzip(spokeData.map(data => [data.ip_address, data.public_key]))
-    return new HubConfig(hub.name, hubData, spokeIpAddresses, spokePublicKeys)
-  }
+  const [downloadLink, setDownloadLink] = useState<string>(null)
 
-  const getDownloadLink = () => {
-    let blob = generateHubConfigFile(getHubConfig())
-    return URL.createObjectURL(blob)
-  }
-
-  const [downloadLink, setDownloadLink] = useState<string>(validFile ? getDownloadLink() : "#")
-
-  const updateDownloadLink = () => setDownloadLink(getDownloadLink())
+  useEffect(() => {
+    if (Boolean(hub.endpoint) && Boolean(hub.ipAddress)) {
+      const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
+      const hubData = new HubData(hub.publicKey ?? '', hub.ipAddress, endpointAddress, endpointPort)
+      const spokeData = spokes.filter(spoke => !spoke.disabled).map(spoke => new SpokeData(spoke.ipAddress, spoke.publicKey))
+      //Will be able to cut this line and use spokeData directly once wasm-bindgen merges
+      //https://github.com/rustwasm/wasm-bindgen/pull/3554 and the Rust code is updated.
+      const [spokeIpAddresses, spokePublicKeys] = unzip(spokeData.map(data => [data.ip_address, data.public_key]))
+      const config = new HubConfig(hub.name, hubData, spokeIpAddresses, spokePublicKeys)
+      let blob = generateHubConfigFile(config)
+      setDownloadLink(URL.createObjectURL(blob))
+    }
+    else setDownloadLink(null)
+  }, [hub, spokes])
 
   const size = useContext(ResponsiveContext)
 
@@ -193,11 +188,10 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
           <RoundedButton 
             primary
             label={size === 'small' ? 'Download' : undefined}
-            download={validFile ? `${hub.name}.conf` : undefined}
             icon={<Download />}
-            href={validFile ? downloadLink : undefined}
-            onFocus={validFile ? updateDownloadLink : undefined}
-            disabled={!validFile}
+            disabled={!Boolean(downloadLink)}
+            href={downloadLink || undefined}
+            download={Boolean(downloadLink) ? `${hub.name}.conf` : undefined}
           />
         </CardFooter>
       </Collapsible>
