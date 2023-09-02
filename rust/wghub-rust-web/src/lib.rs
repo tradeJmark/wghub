@@ -56,19 +56,16 @@ pub fn generate_spoke_config_file(config: &SpokeConfigWrapper) -> Blob {
   create_spoke_config_file(&config.0).blobbify()
 }
 
-trait IntoCollection<T: Into<R>, R> {
+trait AllInto<T: Into<R>, R> {
   fn all_into(self) -> Vec<R>;
 }
 
-impl IntoCollection<JsString, String> for Vec<JsString> {
-  fn all_into(self) -> Vec<String> {
-    self.iter().map(|s| s.into()).collect()
-  }
-}
-
-impl IntoCollection<String, JsString> for Vec<String> {
-  fn all_into(self) -> Vec<JsString> {
-    self.into_iter().map(|s| s.into()).collect()
+impl<C, R> AllInto<C::Item, R> for C where
+  C: IntoIterator,
+  C::Item: Into<R>
+{
+  fn all_into(self) -> Vec<R> {
+    self.into_iter().map(|t| t.into()).collect()
   }
 }
 
