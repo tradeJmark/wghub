@@ -9,7 +9,7 @@ pub struct WsSession {
 }
 
 impl WsSession {
-  pub fn new(state: AppState, socket: WebSocket) -> WsSession {
+  pub fn new(state: AppState, socket: WebSocket) -> Self {
     WsSession { state, socket }
   }
 
@@ -17,7 +17,9 @@ impl WsSession {
     while let Some(msg) = self.socket.recv().await {
       if let Ok(msg) = msg {
         if let Message::Text(msg) = msg {
-          self.ws_text_msg(msg).await;
+          if let Err(e) = self.ws_text_msg(msg).await {
+            print_persist_error(e.to_string())
+          }
         }
         else if let Message::Binary(msg) = msg {
           self.ws_bin_msg(msg).await;
@@ -26,43 +28,39 @@ impl WsSession {
     }
   }
 
-  async fn ws_text_msg(&mut self, msg: String) {
+  async fn ws_text_msg(&mut self, msg: String) -> Result<(), Box<dyn std::error::Error>>{
     let outgoing = if let Ok(msg) = msg.try_into() {
       match msg {
         WGHubMessage::ClientMessage(msg) => match msg {
           ClientMessage::RequestDataMessage => {
-            let hubs = self.state.hubs.lock().unwrap();
-            let spokes = self.state.spokes.lock().unwrap();
-            Some(ServerMessage::DataMessage {
-              hubs: hubs.values().cloned().collect(),
-              spokes: spokes.values().cloned().collect()
-            })
+            let mut persist = self.state.persist.lock().await;
+            let hubs = persist.get_hubs().await?;
+            let spokes = persist.get_spokes().await?;
+            Some(ServerMessage::DataMessage { hubs, spokes })
           }
           ClientMessage::UpsertHubMessage(hub) => {
-            let mut hubs = self.state.hubs.lock().unwrap();
-            hubs.insert(hub.name.clone(), hub);
+            let mut persist = self.state.persist.lock().await;
+            persist.upsert_hub(hub).await?;
             None
           },
           ClientMessage::DeleteHubMessage(hub_name) => {
-            let mut hubs = self.state.hubs.lock().unwrap();
-            hubs.remove(&hub_name);
+            let mut persist = self.state.persist.lock().await;
+            persist.delete_hub(hub_name).await?;
             None
           }
           ClientMessage::UpsertSpokeMessage(spoke) => {
-            let mut spokes = self.state.spokes.lock().unwrap();
-            spokes.insert(spoke.id.clone(), spoke);
+            let mut persist = self.state.persist.lock().await;
+            persist.upsert_spoke(spoke).await?;
             None
           }
           ClientMessage::DeleteSpokeMessage(id) => {
-            let mut spokes = self.state.spokes.lock().unwrap();
-            spokes.remove(&id);
+            let mut persist = self.state.persist.lock().await;
+            persist.delete_spoke(id).await?;
             None
           }
           ClientMessage::ToggleDisableSpokeMessage(id) => {
-            let mut spokes = self.state.spokes.lock().unwrap();
-            if let Some(spoke) = spokes.get_mut(&id) {
-              spoke.disabled = !spoke.disabled;
-            }
+            let mut persist = self.state.persist.lock().await;
+            persist.toggle_spoke_disabled(id).await?;
             None
           }
           ClientMessage::ClientError(e) => {
@@ -79,6 +77,7 @@ impl WsSession {
     if let Some(outgoing) = outgoing {
       self.try_send(outgoing).await;
     }
+    Ok(())
   }
   
   async fn ws_bin_msg(&mut self, _: Vec<u8>) {
@@ -106,4 +105,8 @@ fn print_send_error(msg: String) {
 
 fn print_client_error(msg: String) {
   eprintln!("Client reported error: {msg}");
+}
+
+fn print_persist_error(msg: String) {
+  eprintln!("Error persisting to storage: {msg}");
 }
