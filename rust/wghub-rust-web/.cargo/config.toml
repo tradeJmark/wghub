@@ -1,0 +1,2 @@
+[env]
+WGHUB_DEV_BACKEND="ws://localhost:8080/ws"

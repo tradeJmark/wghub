@@ -125,14 +125,11 @@ extern "C" {
   fn import_spokes(hubs: Vec<Spoke>) -> AnyAction;
 }
 
-#[wasm_bindgen(raw_module = "../../../src/App")]
-extern "C" {
-  #[wasm_bindgen(js_name = "backend")]
-  static BACKEND: Option<String>;
-}
-
 fn get_websocket_url() -> String {
-  BACKEND.clone().unwrap_or_else(|| {
+  if cfg!(debug_assertions) {
+    env!("WGHUB_DEV_BACKEND").to_string()
+  }
+  else {
     let location = window().unwrap().location();
     let proto = if location.protocol().unwrap() == "https:" {
       "wss"
@@ -141,7 +138,7 @@ fn get_websocket_url() -> String {
       "ws"
     };
     format!("{proto}://{}/ws", location.host().unwrap())
-  }).to_string()
+  }
 }
 
 #[wasm_bindgen]
