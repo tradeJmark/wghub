@@ -55,8 +55,6 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
   </ThemeContext.Extend>
 )
 
-export const backend = process.env['NODE_ENV'] === 'development' ? process.env['REACT_APP_WGHUB_BACKEND'] : null
-
 export const App = () => {
   const [newHubVisible, setNewHubVisible] = useState(false)
   const showNewHub = () => setNewHubVisible(true)
