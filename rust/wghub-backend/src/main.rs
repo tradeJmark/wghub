@@ -1,11 +1,9 @@
-mod ws_session;
 mod persist;
 
+use axum::Router;
+use persist::{in_mem::InMemPersist, mongo::MongoPersist, Persist};
 use std::{env, error::Error, sync::Arc};
-use axum::{routing::get, Router, extract::{WebSocketUpgrade, ws::WebSocket, State}, response::Response};
-use persist::{Persist, mongo::MongoPersist, in_mem::InMemPersist};
 use tokio::sync::Mutex;
-use ws_session::WsSession;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -33,7 +31,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     AppState::new()
   };
   let app = Router::new()
-    .route("/ws", get(handle_ws_connection))
     .with_state(state);
   
   axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
@@ -41,13 +38,4 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .await
     .unwrap();
   Ok(())
-}
-
-async fn handle_ws_connection(wsu: WebSocketUpgrade, State(state): State<AppState>) -> Response {
-  wsu.on_upgrade(|socket| handle_socket(socket, state))
-}
-
-async fn handle_socket(socket: WebSocket, state: AppState) {
-  let mut session = WsSession::new(state, socket);
-  session.launch().await;
 }
