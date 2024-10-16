@@ -12,19 +12,6 @@ pub fn set_panic_hook() {
   console_error_panic_hook::set_once();
 }
 
-pub trait AllInto<R> {
-  fn all_into(self) -> Vec<R>;
-}
-
-impl<C, R> AllInto<R> for C where
-  C: IntoIterator,
-  C::Item: Into<R>
-{
-  fn all_into(self) -> Vec<R> {
-    self.into_iter().map(|t| t.into()).collect()
-  }
-}
-
 pub trait Blobbable {
   fn blobbify(self) -> Blob;
 }

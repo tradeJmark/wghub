@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-wasm = ["wasm-bindgen", "ws_stream_wasm"]
-axum = ["dep:axum"]
+frontend = ["wasm-bindgen"]
+backend = ["axum"]
 
 [dependencies]
-wasm-bindgen = { version = "0.2.84", optional = true }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1.0.105" }
 axum = { version = "0.6.20", features = ["ws"], optional = true }
-ws_stream_wasm = { version = "0.7", optional = true }
+uuid = { version = "1.10.0", features = ["serde", "v4"] }
+wasm-bindgen = { version = "0.2.95", optional = true }

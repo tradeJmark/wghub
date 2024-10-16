@@ -1,7 +1,7 @@
-#[cfg(feature = "wasm")]
+#[cfg(feature = "frontend")]
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "wasm", wasm_bindgen(getter_with_clone))]
+#[cfg_attr(feature = "frontend", wasm_bindgen(getter_with_clone))]
 #[derive(Clone)]
 pub struct HubData {
   pub public_key: String,
@@ -10,9 +10,9 @@ pub struct HubData {
   pub endpoint_port: String
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[cfg_attr(feature = "frontend", wasm_bindgen)]
 impl HubData {
-  #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
+  #[cfg_attr(feature = "frontend", wasm_bindgen(constructor))]
   pub fn new(public_key: String, ip_address: String, endpoint_address: String, endpoint_port: String) -> HubData {
     HubData { public_key, ip_address, endpoint_address, endpoint_port }
   }

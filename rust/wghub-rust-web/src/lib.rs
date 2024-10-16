@@ -1,6 +1,5 @@
 mod utils;
 
-
 use utils::Blobbable;
 use wasm_bindgen::prelude::*;
 use web_sys::Blob;
