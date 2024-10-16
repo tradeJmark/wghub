@@ -12,7 +12,7 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 wghub-rust = { path = "../wghub-rust", features = ["wasm"] }
-wasm-bindgen = "0.2.84"
+wasm-bindgen = "0.2.95"
 wasm-bindgen-futures = "0.4.37"
 js-sys = "0.3.64"
 web-sys = { version = "0.3.64", features = ["Blob", "Window", "Location"] }
