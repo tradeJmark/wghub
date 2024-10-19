@@ -1,15 +1,17 @@
 import { FormField, TextInput } from 'grommet'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from './app/hooks'
-import { addArrayItem, editHub } from './features/hubs/hubsSlice'
-import { Hub } from './model/Hub'
-import { KeyOfType } from './util'
+// import { addArrayItem, editHub } from './features/hubs/hubsSlice'
+import { KeyOfType, NoID } from './util'
 import { Dialog, DialogProps } from './Dialog'
-import { AppContext } from './AppContext'
+import { useGetHubQuery, useUpdateHubMutation } from './features/api'
+import { Hub } from 'wghub-rust-web'
+
+export type FieldName = NoID<KeyOfType<Hub, string | string[]>>
 
 interface EditFieldDialogProps extends DialogProps<FormData> {
-  hubName: string,
-  fieldName: keyof Hub
+  hubId: string,
+  fieldName: FieldName
   fieldDisplayName: string
   placeholder?: string
   array?: boolean
@@ -22,7 +24,7 @@ interface FormData {
 }
 
 export const EditFieldDialog = ({
-  hubName,
+  hubId,
   fieldName, 
   fieldDisplayName,
   placeholder,
@@ -33,10 +35,12 @@ export const EditFieldDialog = ({
   finalize,
   ...props
 }: EditFieldDialogProps) => {
-  const ctx = useContext(AppContext)
-  const dispatch = useAppDispatch()
-  const hub = useAppSelector(state => state.hubs.entities[hubName])
-  const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as KeyOfType<Hub, string>] ?? ''}), [hub, fieldName, array])
+  // const dispatch = useAppDispatch()
+  // const hub = useAppSelector(state => state.hubs.entities[hubName])
+  const [updateHub] = useUpdateHubMutation()
+  const { data: shub } = useGetHubQuery(hubId)
+  const hub = Hub.fromJSON(shub)
+  const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as NoID<KeyOfType<Hub, string>>] ?? ''}), [shub, fieldName, array])
   const [formData, setFormData] = useState<FormData>(getDefaultValue())
   useEffect(() => {
     setFormData(getDefaultValue())
@@ -51,15 +55,14 @@ export const EditFieldDialog = ({
     onSubmit={({ value }) => {
       const finalizedValue = finalize?.(value.newValue) ?? value.newValue
       if (array) {
-        const arrayName = fieldName as KeyOfType<Hub, string[]>
-        dispatch(addArrayItem(ctx.server, {hubName: hub.name, arrayName, arrayValue: finalizedValue}))
+        const arrayName = fieldName as NoID<KeyOfType<Hub, string[]>>
+        hub[arrayName] = hub[arrayName].concat(finalizedValue)
+        updateHub(hub)
       }
       else {
-        const update = {
-          id: hub.name,
-          changes: {[fieldName]: finalizedValue}
-        }
-        dispatch(editHub(ctx.server, update))
+        const strFieldName = fieldName as NoID<KeyOfType<Hub, string>>
+        hub[strFieldName] = finalizedValue
+        updateHub(hub)
       }
     }}
     onDone={() => {

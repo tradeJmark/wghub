@@ -7,10 +7,13 @@ default-run = "wghub-backend"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = { version = "0.6.20"}
-tokio = { version = "1.40.0", features = ["full"] }
+axum = "0.7.7"
+tokio = { version = "1.40.0", features = ["full", "net"] }
 futures-util = { version = "0.3.28" }
-wghub-rust = { path = "../wghub-rust", features = ["backend"] }
+wghub-rust = { path = "../wghub-rust" }
 mongodb = { version = "3.1.0"}
 uuid = { version = "1.10.0", features = ["serde"] }
 async-trait = { version = "0.1.73"}
+tower-http = { version = "0.6.1", features = ["cors"] }
+http = "1.1.0"
+tower = "0.5.1"

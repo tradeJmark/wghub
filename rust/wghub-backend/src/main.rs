@@ -1,6 +1,9 @@
-use axum::{Router, Server};
+use axum::{serve, Router};
+use tokio::net::TcpListener;
+use tower_http::cors::{Any, CorsLayer};
 use wghub_backend::{api, AppState};
 use std::{env, error::Error};
+use http::{header::CONTENT_TYPE, Method};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -11,12 +14,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
   else {
     AppState::new()
   };
+
+  let cors = CorsLayer::new()
+   .allow_methods([Method::GET, Method::POST])
+   .allow_origin(Any)
+   .allow_headers([CONTENT_TYPE]);
+
   let app = Router::new()
     .nest("/api", api::build_router())
-    .with_state(state);
+    .with_state(state)
+    .layer(cors);
   
-  Server::bind(&"0.0.0.0:8080".parse().unwrap())
-    .serve(app.into_make_service())
+  let listener = TcpListener::bind(&"0.0.0.0:8080").await?;
+  serve(listener, app)
     .await
     .unwrap();  
   Ok(())

@@ -10,7 +10,9 @@ pub struct HubConfig {
   pub spokes: Vec<SpokeData>
 }
 
+#[cfg_attr(feature = "frontend", wasm_bindgen)]
 impl HubConfig {
+  #[cfg_attr(feature = "frontend", wasm_bindgen(constructor))]
   pub fn new(name: String, hub: HubData, spokes: Vec<SpokeData>) -> HubConfig {
     HubConfig { name, hub, spokes }
   }

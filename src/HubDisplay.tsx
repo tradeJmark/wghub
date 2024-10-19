@@ -1,19 +1,24 @@
-import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardBody, Button, Collapsible, CardFooter, ResponsiveContext } from 'grommet'
-import { useContext, useEffect, useMemo, useState } from 'react'
-import { EditFieldDialog } from './EditFieldDialog'
-import { useAppDispatch, useAppSelector } from './app/hooks'
-import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
+import { Tag, Box, Card, Heading, Paragraph, CardHeader, BoxExtendedProps, CardBody, Button, Collapsible, CardFooter, ResponsiveContext, Spinner } from 'grommet'
+import { useContext, useEffect, useState } from 'react'
+import { EditFieldDialog, FieldName } from './EditFieldDialog'
+// import { collapseHub, deleteHub, expandHub, removeArrayItem } from './features/hubs/hubsSlice'
 import { Add, Down, Download, Trash, Up } from 'grommet-icons'
-import { Hub, hubSplitEndpoint } from './model/Hub'
-import { KeyOfType, ipv4RegExpOptional, ipv4RegExpPartial, unzip } from './util'
+import { KeyOfType, NoID, ipv4RegExpOptional, ipv4RegExpPartial } from './util'
 import { SpokeList } from './SpokeList'
-import { HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
+import { Hub, HubConfig, HubData, SpokeData, generateHubConfigFile } from 'wghub-rust-web'
 import { RoundedButton, TruncatableTag } from './ui-util'
-import { AppContext } from './AppContext'
-import { getSpokesForHubSelector } from './features/spokes/spokesSlice'
+// import { getSpokesForHubSelector } from './features/spokes/spokesSlice'
+import { useGetHubQuery, useUpdateHubMutation } from './features/api'
+
+const hubSplitEndpoint = (hub: Hub): [string, string] => {
+  const [address, port] = hub.endpoint?.split(":")
+  return [address, port]
+}
+
+const EMPTY = []
 
 interface HubEditData {
-  fieldName?: keyof Hub
+  fieldName?: FieldName
   fieldDisplayName?: string
   placeholder?: string
   array?: boolean
@@ -21,7 +26,7 @@ interface HubEditData {
   inputFinalize?: (newValue: string) => string
 }
 
-interface FieldProps<T extends keyof Hub> {
+interface FieldProps<T extends FieldName> {
   name: T
   displayName: string
   editPlaceholder?: string
@@ -34,14 +39,13 @@ interface ArrayFieldProps extends FieldProps<KeyOfType<Hub, string[]>> {
 }
 
 export interface HubDisplayProps extends BoxExtendedProps {
-  hubName: string
+  hubId: string
 }
 
-export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
-  const ctx = useContext(AppContext)
+export const HubDisplay = ({ hubId, ...props }: HubDisplayProps) => { 
   const [editField, _setEditField] = useState<HubEditData>(null)
   const setEditField = (
-    name: keyof Hub,
+    name: FieldName,
     displayName: string,
     placeholder=undefined,
     inputValidation=undefined,
@@ -59,35 +63,35 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   }
   const clearEditField = () => _setEditField(null)
 
-  const hub = useAppSelector(state => state.hubs.entities[hubName])
-  const expanded = useAppSelector(state => state.hubs.expanded[hubName])
-  const spokesSelector = useMemo(getSpokesForHubSelector, [])
-  const spokes = useAppSelector(state => spokesSelector(state, hubName))
-  const dispatch = useAppDispatch()
-  const expand = () => dispatch(expandHub(hub.name))
-  const collapse = () => dispatch(collapseHub(hub.name))
-  const del = () => dispatch(deleteHub(ctx.server, hub.name))
+  //const hub = useAppSelector(state => state.hubs.entities[hubName])
+  const { isLoading, data: shub } = useGetHubQuery(hubId)
+  const [updateHub] = useUpdateHubMutation()
+  const hub = Hub.fromJSON(shub)
+  const expanded = true//useAppSelector(state => state.hubs.expanded[hubName])
+  //const spokesSelector = useMemo(getSpokesForHubSelector, [])
+  //const spokes = []//useAppSelector(state => spokesSelector(state, hubName))
+  //const dispatch = useAppDispatch()
+  //const expand = () => dispatch(expandHub(hub.name))
+  //const collapse = () => dispatch(collapseHub(hub.name))
+  //const del = () => dispatch(deleteHub(ctx.server, hub.name))
 
   const [downloadLink, setDownloadLink] = useState<string>(null)
 
   useEffect(() => {
-    if (Boolean(hub.endpoint) && Boolean(hub.ipAddress)) {
+    if (Boolean(hub.endpoint) && Boolean(hub.ip_address)) {
       const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
-      const hubData = new HubData(hub.publicKey ?? '', hub.ipAddress, endpointAddress, endpointPort)
-      const spokeData = spokes.filter(spoke => !spoke.disabled).map(spoke => new SpokeData(spoke.ipAddress, spoke.publicKey))
-      //Will be able to cut this line and use spokeData directly once wasm-bindgen merges
-      //https://github.com/rustwasm/wasm-bindgen/pull/3554 and the Rust code is updated.
-      const [spokeIpAddresses, spokePublicKeys] = unzip(spokeData.map(data => [data.ip_address, data.public_key]))
-      const config = new HubConfig(hub.name, hubData, spokeIpAddresses, spokePublicKeys)
+      const hubData = new HubData(hub.public_key ?? '', hub.ip_address, endpointAddress, endpointPort)
+      const spokeData = EMPTY//spokes.filter(spoke => !spoke.disabled).map(spoke => new SpokeData(spoke.ipAddress, spoke.publicKey))
+      const config = new HubConfig(hub.name, hubData, spokeData)
       let blob = generateHubConfigFile(config)
       setDownloadLink(URL.createObjectURL(blob))
     }
     else setDownloadLink(null)
-  }, [hub, spokes])
+  }, [shub])
 
   const size = useContext(ResponsiveContext)
 
-  const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<KeyOfType<Hub, string>>) => {
+  const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<NoID<KeyOfType<Hub, string>>>) => {
     return <TruncatableTag
       limit={size === 'small' ? 20 : 30}
       name={displayName}
@@ -108,7 +112,11 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
           return <Box pad='xsmall' key={value}>
             <Tag
               value={value}
-              onRemove={() => dispatch(removeArrayItem(ctx.server, {hubName: hub.name, arrayName: name, arrayValue: value}))}
+              onRemove={() => {
+                const arr = hub[name]
+                hub[name] = hub[name].filter(i => i !== value)
+                updateHub(hub)
+              }}
             />
           </Box>
         })}
@@ -125,7 +133,7 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
   return <>
     <EditFieldDialog
       visible={editField != null}
-      hubName={hub.name}
+      hubId={hub.id}
       fieldName={editField?.fieldName}
       fieldDisplayName={editField?.fieldDisplayName}
       placeholder={editField?.placeholder}
@@ -136,65 +144,70 @@ export const HubDisplay = ({ hubName, ...props }: HubDisplayProps) => {
       onNegative={clearEditField}
     />
     <Card pad="small" elevation='large' width='large' {...props}>
-      <CardHeader>
-        <Box direction='row' justify='between' fill='horizontal'>
-          <Button icon={<Trash />} onClick={del} />
-          <Box align='center' direction='column' fill='horizontal'>
-            <Heading level={2} margin={{bottom: 'none'}}>{hub.name}</Heading>
-            <Paragraph>{hub.description}</Paragraph>
-          </Box>
-          <Button icon={expanded ? <Up /> : <Down />} onClick={expanded ? collapse : expand} />
-        </Box>
-      </CardHeader>
-      <Collapsible open={expanded}>
-        <CardBody pad={{bottom: 'medium'}}>
-          <Box align='center' gap='small'>
-            <HubField name='publicKey' displayName='Public Key' />
-            <HubField
-              name='endpoint'
-              displayName='Endpoint'
-              editPlaceholder='<server>:<port>'
-              inputValidation={{
-                regexp: /^[\w.-]+:\d\d?\d?\d?$/,
-                message: 'Must specify address:port'
-              }}
-            />
-            <HubField
-              name='ipAddress'
-              displayName='Hub IP Address'
-              inputValidation={{
-                regexp: ipv4RegExpOptional,
-                message: "Must use format x.x.x.x"
-              }}
-            />
-            <Box direction={size === 'small' ? 'column' : 'row'} gap='medium' justify='around' fill='horizontal' margin={{top: 'medium'}}>
-              <HubArrayField name='dnsServers' displayName='DNS Servers' inputValidation={{regexp: /^[\w.-]+$/}} />
-              <HubArrayField name='searchDomains' displayName='Search Domains' inputValidation={{regexp: /^[\w.-]+$/}} />
-              <HubArrayField
-                name='allowedIPs'
-                displayName='Allowed IPs'
-                editPlaceholder='x.x.x.x/yy (default /24)'
-                inputValidation={{
-                  regexp: RegExp(`^${ipv4RegExpPartial.source}(/\\d\\d?)?$`),
-                  message: "Must use format x.x.x.x/yy"
-                }}
-                inputFinalize={(input) => input.includes('/') ? input : `${input}/24`}
-              />
+      { isLoading ?
+        <Spinner />
+        : <>
+          <CardHeader>
+            <Box direction='row' justify='between' fill='horizontal'>
+              <Button icon={<Trash />} /*onClick={del}*/ />
+              <Box align='center' direction='column' fill='horizontal'>
+                <Heading level={2} margin={{bottom: 'none'}}>{hub.name}</Heading>
+                <Paragraph>{hub.description}</Paragraph>
+              </Box>
+              <Button icon={expanded ? <Up /> : <Down />} /*onClick={expanded ? collapse : expand}*/ />
             </Box>
-            <SpokeList margin={{top: 'medium'}} hubName={hub.name} />
-          </Box>
-        </CardBody>
-        <CardFooter justify={size === 'small' ? 'center' : 'end'}>
-          <RoundedButton 
-            primary
-            label={size === 'small' ? 'Download' : undefined}
-            icon={<Download />}
-            disabled={!Boolean(downloadLink)}
-            href={downloadLink || undefined}
-            download={Boolean(downloadLink) ? `${hub.name}.conf` : undefined}
-          />
-        </CardFooter>
-      </Collapsible>
+          </CardHeader>
+          <Collapsible open={expanded}>
+            <CardBody pad={{bottom: 'medium'}}>
+              <Box align='center' gap='small'>
+                <HubField name='public_key' displayName='Public Key' />
+                <HubField
+                  name='endpoint'
+                  displayName='Endpoint'
+                  editPlaceholder='<server>:<port>'
+                  inputValidation={{
+                    regexp: /^[\w.-]+:\d\d?\d?\d?$/,
+                    message: 'Must specify address:port'
+                  }}
+                />
+                <HubField
+                  name='ip_address'
+                  displayName='Hub IP Address'
+                  inputValidation={{
+                    regexp: ipv4RegExpOptional,
+                    message: "Must use format x.x.x.x"
+                  }}
+                />
+                <Box direction={size === 'small' ? 'column' : 'row'} gap='medium' justify='around' fill='horizontal' margin={{top: 'medium'}}>
+                  <HubArrayField name='dns_servers' displayName='DNS Servers' inputValidation={{regexp: /^[\w.-]+$/}} />
+                  <HubArrayField name='search_domains' displayName='Search Domains' inputValidation={{regexp: /^[\w.-]+$/}} />
+                  <HubArrayField
+                    name='allowed_ips'
+                    displayName='Allowed IPs'
+                    editPlaceholder='x.x.x.x/yy (default /24)'
+                    inputValidation={{
+                      regexp: RegExp(`^${ipv4RegExpPartial.source}(/\\d\\d?)?$`),
+                      message: "Must use format x.x.x.x/yy"
+                    }}
+                    inputFinalize={(input) => input.includes('/') ? input : `${input}/24`}
+                  />
+                </Box>
+                <SpokeList margin={{top: 'medium'}} hubName={hub.name} />
+              </Box>
+            </CardBody>
+            <CardFooter justify={size === 'small' ? 'center' : 'end'}>
+              <RoundedButton 
+                primary
+                label={size === 'small' ? 'Download' : undefined}
+                icon={<Download />}
+                disabled={!Boolean(downloadLink)}
+                href={downloadLink || undefined}
+                download={Boolean(downloadLink) ? `${hub.name}.conf` : undefined}
+              />
+            </CardFooter>
+          </Collapsible>
+        </>
+      }
     </Card>
   </>
 }

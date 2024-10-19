@@ -1,23 +1,19 @@
 import { Box, Button, Text } from "grommet"
-import { Spoke, idFromSpoke } from "./model/Spoke"
 import { Checkbox, CheckboxSelected, Download, Edit, Trash } from "grommet-icons"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
-import { deleteSpoke, toggleSpokeDisabled } from "./features/spokes/spokesSlice"
+// import { deleteSpoke, toggleSpokeDisabled } from "./features/spokes/spokesSlice"
 import { useContext, useEffect, useState } from "react"
 import { HubData, SpokeCommonData, SpokeConfig, SpokeData, generateSpokeConfigFile } from "wghub-rust-web"
-import { hubSplitEndpoint } from "./model/Hub"
-import { AppContext } from "./AppContext"
 
 export interface SpokeListSecondaryProps {
-  spoke: Spoke
-  onEdit: (spoke: Spoke) => void
+  spoke: any//Spoke
+  onEdit: (spoke: any/*Spoke*/) => void
 }
 export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) => {
-  const ctx = useContext(AppContext)
   const dispatch = useAppDispatch()
-  const hub = useAppSelector(state => state.hubs.entities[spoke.hub])
+  //const hub = useAppSelector(state => state.hubs.entities[spoke.hub])
   const [downloadUrl, setDownloadUrl] = useState<string>(null)
-  useEffect(() => {
+  /*useEffect(() => {
     if (Boolean(hub.publicKey) && Boolean(hub.endpoint)) {
       const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
       const hubData = new HubData(hub.publicKey, hub.ipAddress ?? '', endpointAddress, endpointPort)
@@ -29,7 +25,7 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
       setDownloadUrl(address)
     }
     else setDownloadUrl(null)
-  }, [hub, spoke])
+  }, [hub, spoke])*/
 
   return <Box direction='row' justify='between' gap='medium'>
     <Text>{spoke.ipAddress}</Text>
@@ -38,7 +34,7 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
         icon={spoke.disabled || !Boolean(spoke.publicKey) ? <Checkbox /> : <CheckboxSelected />}
         disabled={!Boolean(spoke.publicKey)}
         pad='xxsmall'
-        onClick={() => dispatch(toggleSpokeDisabled(ctx.server, idFromSpoke(spoke)))}
+        //onClick={() => dispatch(toggleSpokeDisabled(ctx.server, idFromSpoke(spoke)))}
       />
       <Button
         icon={<Download />}
@@ -48,7 +44,7 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
         download={Boolean(downloadUrl) ? `${spoke.name}.conf` : undefined}
       />
       <Button icon={<Edit />} pad='xxsmall' onClick={() => onEdit(spoke)} />
-      <Button icon={<Trash />} pad='xxsmall' onClick={() => dispatch(deleteSpoke(ctx.server, idFromSpoke(spoke)))} />
+      <Button icon={<Trash />} pad='xxsmall' /*onClick={() => dispatch(deleteSpoke(ctx.server, idFromSpoke(spoke)))}*/ />
     </Box>
   </Box>
 }

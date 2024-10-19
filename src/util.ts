@@ -16,3 +16,15 @@ export function unzip<T>(list: [T, T][]): [T[], T[]] {
 export const ipv4RegExpPartial = /\d\d?\d?\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?/
 export const ipv4RegExp = RegExp(`^${ipv4RegExpPartial.source}$`)
 export const ipv4RegExpOptional = RegExp(`^(${ipv4RegExpPartial.source})?$`)
+
+type NonFunctionKeyNames<T> = Exclude<{
+  [key in keyof T] : T[key] extends Function? never : key;
+}[keyof T], undefined>;
+ 
+interface HasSerializedID {
+  _id: string
+}
+export type RemoveFunctions<T> = Pick<T, NonFunctionKeyNames<T>>;
+export type Serialized<T> = RemoveFunctions<T> & HasSerializedID
+
+export type NoID<T> = Exclude<T, "id">

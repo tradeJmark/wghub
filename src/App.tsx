@@ -1,14 +1,14 @@
-import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext } from 'grommet'
+import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext, Spinner } from 'grommet'
 import { deepMerge } from 'grommet/utils'
-import { useContext, useEffect, useState } from 'react';
-import { useAppSelector } from './app/hooks';
+import { useState } from 'react';
 import { NewHubDialog } from './NewHubDialog';
 import { HubDisplay } from './HubDisplay';
 import { Add } from 'grommet-icons';
 import { FloatingActionButton } from './FloatingActionButton';
 import { Warning } from './Warning';
 import { ImpExpFooter } from './ImpExpFooter';
-import { AppContext } from './AppContext';
+import { useGetHubsQuery } from './features/api';
+import { Hub } from 'wghub-rust-web';
 
 const theme = deepMerge(grommet, {
   global: {
@@ -59,9 +59,8 @@ export const App = () => {
   const [newHubVisible, setNewHubVisible] = useState(false)
   const showNewHub = () => setNewHubVisible(true)
   const closeNewHub = () => setNewHubVisible(false)
-  const hubNames = useAppSelector(state => state.hubs.ids)
-  const ctx = useContext(AppContext)
-  useEffect(() => { ctx.server?.requestData() }, [ctx])
+  const { data: hubs, error, isLoading } = useGetHubsQuery()
+  if (error) { console.log(error) }
   return (
     <Grommet theme={theme} full>
       <NewHubDialog
@@ -74,13 +73,15 @@ export const App = () => {
         </AppBar>
         <PageContent pad='medium' align='center'>
           <Box gap='medium'>
-          {hubNames.length === 0 && <Warning>No hubs available, create one to begin.</Warning>}
-          {hubNames.map(hubName => {
-            return <HubDisplay
-              key={hubName}
-              hubName={hubName.valueOf() as string}
-            />
-          })}
+            {isLoading && <Spinner />}
+            {!isLoading && hubs?.length === 0 && <Warning>No hubs available, create one to begin.</Warning>}
+            {hubs?.map(shub => {
+              let hub = Hub.fromJSON(shub)
+              return <HubDisplay
+                key={hub.id.toString()}
+                hubId={hub.id}
+              />
+            })}
           </Box>
         </PageContent>
       </Page>
@@ -89,7 +90,7 @@ export const App = () => {
         icon={<Add />}
         onClick={showNewHub}
       />
-      <ImpExpFooter showExport={hubNames.length > 0} />
+      <ImpExpFooter showExport={hubs?.length > 0} />
     </Grommet>
   );
 }

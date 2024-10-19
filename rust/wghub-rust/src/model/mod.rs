@@ -3,4 +3,3 @@ mod hub;
 pub use hub::*;
 mod spoke;
 pub use spoke::*;
-pub mod message;

@@ -1,6 +1,5 @@
 import { Box, BoxExtendedProps, Button, Heading, List, ResponsiveContext, Text } from 'grommet'
-import { Spoke, idForSpoke } from './model/Spoke'
-import { getSpokesForHubSelector } from './features/spokes/spokesSlice'
+// import { getSpokesForHubSelector } from './features/spokes/spokesSlice'
 import { useAppSelector } from './app/hooks'
 import { Add } from 'grommet-icons'
 import { useContext, useMemo, useState } from 'react'
@@ -12,8 +11,8 @@ export interface SpokeListProps extends BoxExtendedProps {
 }
 
 export const SpokeList = ({ hubName, ...props }: SpokeListProps) => {
-  const spokeSelector = useMemo(getSpokesForHubSelector, [])
-  const spokes = useAppSelector(state => spokeSelector(state, hubName))
+  //const spokeSelector = useMemo(getSpokesForHubSelector, [])
+  const spokes = []//useAppSelector(state => spokeSelector(state, hubName))
 
   const [spokeToEdit, setEditSpoke] = useState<string>(undefined)
 
@@ -24,16 +23,16 @@ export const SpokeList = ({ hubName, ...props }: SpokeListProps) => {
     setEditSpoke(undefined)
   }
 
-  const editSpoke = (spoke: Spoke) => {
+  {/*const editSpoke = (spoke: Spoke) => {
     setEditSpoke(spoke.name)
     showNewSpokeDialog()
-  }
+  }*/}
 
   const size = useContext(ResponsiveContext)
 
   return <>
     <NewSpokeDialog hubName={hubName} spokeName={spokeToEdit} visible={newSpokeVisible} onPositive={hideNewSpokeDialog} onNegative={hideNewSpokeDialog} />
-    <Box {...props} gap='medium' align='center'>
+    {/*<Box {...props} gap='medium' align='center'>
       <Heading margin='none' alignSelf='center' level='3'>Spokes</Heading>
       {spokes.length > 0 ? <List<Spoke>
         primaryKey={spoke => <Box key={'!name ' + spoke.name} width={size === 'small' ? '100px' : undefined}><Text  truncate>{spoke.name}</Text></Box>}
@@ -48,6 +47,6 @@ export const SpokeList = ({ hubName, ...props }: SpokeListProps) => {
         label='New Spoke'
         onClick={showNewSpokeDialog}
       />
-    </Box>
+    </Box>*/}
   </>
 }

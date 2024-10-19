@@ -1,23 +1,22 @@
-use axum::{extract::{Path, State}, response::IntoResponse, routing::post, Json};
+use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, routing::{delete, get, post}, Json, Router};
 use uuid::Uuid;
-use wghub_rust::model::{message::IDMessage, AnonymousHub, AnonymousSpoke, Hub, Spoke};
-use axum::{routing::{get, put}, Router};
+use wghub_rust::model::{Hub, Spoke};
 use crate::AppState;
 use super::util::to_server_error;
 
 pub fn build_router() -> Router<AppState> {
   Router::new()
     .route("/", get(get_hubs))
-    .route("new", post(create_hub))
+    .route("/upsert", post(upsert_hub))
     .nest("/:hub_id", build_per_hub_router())
 }
 
 fn build_per_hub_router() -> Router<AppState> {
   Router::new()
-    .route("/", put(update_hub).delete(delete_hub))
+    .route("/", delete(delete_hub))
     .route("/spokes", get(get_spokes_for_hub))
-    .route("new-spoke", post(create_spoke))
-    .route("/:spoke_id", put(update_spoke).delete(delete_spoke))
+    //.route("/new-spoke", post(create_spoke))
+    //.route("/:spoke_id", put(update_spoke).delete(delete_spoke))
 }
 
 async fn get_hubs(State(state): State<AppState>) -> Result<Json<Vec<Hub>>, impl IntoResponse> {
@@ -27,26 +26,13 @@ async fn get_hubs(State(state): State<AppState>) -> Result<Json<Vec<Hub>>, impl 
     .map_err(to_server_error)
 }
 
-async fn create_hub(
+async fn upsert_hub(
   State(state): State<AppState>,
-  Json(anon_hub): Json<AnonymousHub>
-) -> Result<Json<IDMessage>, impl IntoResponse> {
+  Json(hub): Json<Hub>
+) -> Result<StatusCode, impl IntoResponse> {
   let mut repo = state.repo.lock().await;
-  repo.upsert_hub(anon_hub.to_hub(None)).await
-    .map(IDMessage::new)
-    .map(Json)
-    .map_err(to_server_error)
-}
-
-async fn update_hub(
-  State(state): State<AppState>,
-  Path(hub_id): Path<Uuid>,
-  Json(anon_hub): Json<AnonymousHub>
-) -> Result<Json<IDMessage>, impl IntoResponse> {
-  let mut repo = state.repo.lock().await;
-  repo.upsert_hub(anon_hub.to_hub(Some(hub_id))).await
-    .map(IDMessage::new)
-    .map(Json)
+  repo.upsert_hub(hub).await
+    .map(|_| StatusCode::NO_CONTENT)
     .map_err(to_server_error)
 }
 
@@ -69,7 +55,7 @@ async fn delete_hub(
     .map_err(to_server_error)
 }
 
-async fn create_spoke(
+/*async fn create_spoke(
   State(state): State<AppState>,
   Path(hub_id): Path<Uuid>,
   Json(anon_spoke): Json<AnonymousSpoke>
@@ -101,4 +87,4 @@ async fn delete_spoke(
   let mut repo = state.repo.lock().await;
   repo.delete_spoke(spoke_id).await
     .map_err(to_server_error)
-}
+}*/

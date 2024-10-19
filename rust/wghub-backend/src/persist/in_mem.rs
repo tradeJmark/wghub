@@ -31,7 +31,7 @@ impl Persist for InMemPersist {
     Ok(self.spokes.values().cloned().collect())
   }
   async fn upsert_hub(&mut self, hub: Hub) -> Result<Uuid, super::Error> {
-    let id = hub.id.clone();
+    let id = hub.id().clone();
     self.hubs.insert(id.clone(), hub);
     Ok(id)
   }

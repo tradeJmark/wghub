@@ -51,7 +51,7 @@ impl Persist for MongoPersist {
   }
   async fn upsert_hub(&mut self, hub: Hub) -> Result<Uuid, super::Error>{
     let collection = self.db.collection("hubs");
-    let query = doc! { "_id": to_bson(&hub.id)? };
+    let query = doc! { "_id": to_bson(&hub.id())? };
     collection.replace_one(query, hub).upsert(true).await
       .map_err(Into::into)
       .and_then(|res| res.upserted_id.ok_or(missing_id_error()))
