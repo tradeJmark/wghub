@@ -28,3 +28,8 @@ export type RemoveFunctions<T> = Pick<T, NonFunctionKeyNames<T>>;
 export type Serialized<T> = RemoveFunctions<T> & HasSerializedID
 
 export type NoID<T> = Exclude<T, "id">
+
+export const splitAddressAndPort = (unified: string): [string, string] => {
+  const [address, port] = unified.split(":")
+  return [address, port]
+}

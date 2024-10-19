@@ -1,10 +1,8 @@
 import { FormField, TextInput } from 'grommet'
-import { useCallback, useContext, useEffect, useState } from 'react'
-import { useAppDispatch, useAppSelector } from './app/hooks'
-// import { addArrayItem, editHub } from './features/hubs/hubsSlice'
+import { useCallback, useEffect, useState } from 'react'
 import { KeyOfType, NoID } from './util'
 import { Dialog, DialogProps } from './Dialog'
-import { useGetHubQuery, useUpdateHubMutation } from './features/api'
+import { selectSingleHub, useGetHubsQuery, useUpdateHubMutation } from './features/api'
 import { Hub } from 'wghub-rust-web'
 
 export type FieldName = NoID<KeyOfType<Hub, string | string[]>>
@@ -35,12 +33,12 @@ export const EditFieldDialog = ({
   finalize,
   ...props
 }: EditFieldDialogProps) => {
-  // const dispatch = useAppDispatch()
-  // const hub = useAppSelector(state => state.hubs.entities[hubName])
   const [updateHub] = useUpdateHubMutation()
-  const { data: shub } = useGetHubQuery(hubId)
-  const hub = Hub.fromJSON(shub)
-  const getDefaultValue = useCallback(() => ({newValue: array ? '' : hub[fieldName as NoID<KeyOfType<Hub, string>>] ?? ''}), [shub, fieldName, array])
+  const { data: shub } = useGetHubsQuery(undefined, selectSingleHub(hubId))
+  const getDefaultValue = useCallback(() => {
+    const hub = Hub.fromJSON(shub)
+    return {newValue: array ? '' : hub[fieldName as NoID<KeyOfType<Hub, string>>] ?? ''}
+  }, [shub, fieldName, array])
   const [formData, setFormData] = useState<FormData>(getDefaultValue())
   useEffect(() => {
     setFormData(getDefaultValue())
@@ -53,6 +51,7 @@ export const EditFieldDialog = ({
     validate='submit'
     positiveButtonText={array ? 'Add' : 'Update'}
     onSubmit={({ value }) => {
+      const hub = Hub.fromJSON(shub)
       const finalizedValue = finalize?.(value.newValue) ?? value.newValue
       if (array) {
         const arrayName = fieldName as NoID<KeyOfType<Hub, string[]>>

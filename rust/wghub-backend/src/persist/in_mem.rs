@@ -23,12 +23,9 @@ impl Persist for InMemPersist {
   }
   async fn get_spokes_for_hub(&mut self, hub_id: Uuid) -> Result<Vec<Spoke>, super::Error> {
     let spokes = self.spokes.iter()
-      .filter(|(id, _)| **id == hub_id)
+      .filter(|(_, spoke)| spoke.hub_id() == hub_id)
       .map(|(_, spoke)| spoke);
     Ok(spokes.cloned().collect())
-  }
-  async fn get_all_spokes(&mut self) -> Result<Vec<Spoke>, super::Error> {
-    Ok(self.spokes.values().cloned().collect())
   }
   async fn upsert_hub(&mut self, hub: Hub) -> Result<Uuid, super::Error> {
     let id = hub.id().clone();
@@ -40,7 +37,7 @@ impl Persist for InMemPersist {
     Ok(())
   }
   async fn upsert_spoke(&mut self, spoke: Spoke) -> Result<Uuid, super::Error> {
-    let id = spoke.id.clone();
+    let id = spoke.id().clone();
     self.spokes.insert(id.clone(), spoke);
     Ok(id)
   }

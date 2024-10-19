@@ -57,6 +57,17 @@ const AppBar = ({children, ...props}: HeaderExtendedProps) => (
 
 export const App = () => {
   const [newHubVisible, setNewHubVisible] = useState(false)
+  const [expandedHubs, setExpandedHubs] = useState(new Set<string>())
+  const expandHub = (hubId: string) => {
+    const newExpandedHubs = new Set(expandedHubs)
+    newExpandedHubs.add(hubId)
+    setExpandedHubs(newExpandedHubs)
+  }
+  const collpaseHub = (hubId: string) => {
+    const newExpandedHubs = new Set(expandedHubs)
+    newExpandedHubs.delete(hubId)
+    setExpandedHubs(newExpandedHubs)
+  }
   const showNewHub = () => setNewHubVisible(true)
   const closeNewHub = () => setNewHubVisible(false)
   const { data: hubs, error, isLoading } = useGetHubsQuery()
@@ -65,7 +76,10 @@ export const App = () => {
     <Grommet theme={theme} full>
       <NewHubDialog
         visible={newHubVisible}
-        onDone={closeNewHub}
+        onDone={() => {
+          closeNewHub()
+        }}
+        onPositive={(hubId) => expandHub(hubId)}
       />
       <Page>
         <AppBar>
@@ -80,6 +94,15 @@ export const App = () => {
               return <HubDisplay
                 key={hub.id.toString()}
                 hubId={hub.id}
+                expanded={expandedHubs.has(hub.id)}
+                onExpandSet={value => {
+                  if (value) {
+                    expandHub(hub.id)
+                  }
+                  else {
+                    collpaseHub(hub.id)
+                  }
+                }}
               />
             })}
           </Box>

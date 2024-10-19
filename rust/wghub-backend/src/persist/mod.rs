@@ -9,7 +9,6 @@ use wghub_rust::model::{Hub, Spoke};
 pub trait Persist: Send + Sync {
   async fn get_hubs(&mut self) -> Result<Vec<Hub>, Error>;
   async fn get_spokes_for_hub(&mut self, hub_id: Uuid) -> Result<Vec<Spoke>, Error>;
-  async fn get_all_spokes(&mut self) -> Result<Vec<Spoke>, Error>;
   async fn upsert_hub(&mut self, hub: Hub) -> Result<Uuid, Error>;
   async fn delete_hub(&mut self, id: Uuid) -> Result<(), Error>;
   async fn upsert_spoke(&mut self, spoke: Spoke) -> Result<Uuid, Error>;

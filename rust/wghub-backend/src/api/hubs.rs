@@ -1,8 +1,9 @@
 use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, routing::{delete, get, post}, Json, Router};
 use uuid::Uuid;
-use wghub_rust::model::{Hub, Spoke};
+use wghub_rust::model::Hub;
 use crate::AppState;
 use super::util::to_server_error;
+use super::spokes;
 
 pub fn build_router() -> Router<AppState> {
   Router::new()
@@ -14,9 +15,7 @@ pub fn build_router() -> Router<AppState> {
 fn build_per_hub_router() -> Router<AppState> {
   Router::new()
     .route("/", delete(delete_hub))
-    .route("/spokes", get(get_spokes_for_hub))
-    //.route("/new-spoke", post(create_spoke))
-    //.route("/:spoke_id", put(update_spoke).delete(delete_spoke))
+    .nest("/spokes", spokes::build_router())
 }
 
 async fn get_hubs(State(state): State<AppState>) -> Result<Json<Vec<Hub>>, impl IntoResponse> {
@@ -36,55 +35,12 @@ async fn upsert_hub(
     .map_err(to_server_error)
 }
 
-async fn get_spokes_for_hub(
-  State(state): State<AppState>,
-  Path(hub_id): Path<Uuid>
-) -> Result<Json<Vec<Spoke>>, impl IntoResponse> {
-  let mut repo = state.repo.lock().await;
-  repo.get_spokes_for_hub(hub_id).await
-    .map(Json)
-    .map_err(to_server_error)
-} 
-
 async fn delete_hub(
   State(state): State<AppState>,
   Path(hub_id): Path<Uuid>
-) -> Result<(), impl IntoResponse> {
+) -> Result<StatusCode, impl IntoResponse> {
   let mut repo = state.repo.lock().await;
   repo.delete_hub(hub_id).await
+    .map(|_| StatusCode::NO_CONTENT)
     .map_err(to_server_error)
 }
-
-/*async fn create_spoke(
-  State(state): State<AppState>,
-  Path(hub_id): Path<Uuid>,
-  Json(anon_spoke): Json<AnonymousSpoke>
-) -> Result<Json<IDMessage>, impl IntoResponse> {
-  let mut repo = state.repo.lock().await;
-  repo.upsert_spoke(anon_spoke.to_spoke(hub_id, None)).await
-    .map(IDMessage::new)
-    .map(Json)
-    .map_err(to_server_error)
-}
-
-async fn update_spoke(
-  State(state): State<AppState>,
-  Path(hub_id): Path<Uuid>,
-  Path(spoke_id): Path<Uuid>,
-  Json(anon_spoke): Json<AnonymousSpoke>
-) -> Result<Json<IDMessage>, impl IntoResponse> {
-  let mut repo = state.repo.lock().await;
-  repo.upsert_spoke(anon_spoke.to_spoke(hub_id, Some(spoke_id))).await
-    .map(IDMessage::new)
-    .map(Json)
-    .map_err(to_server_error)
-}
-
-async fn delete_spoke(
-  State(state): State<AppState>,
-  Path(spoke_id): Path<Uuid>
-) -> Result<(), impl IntoResponse> {
-  let mut repo = state.repo.lock().await;
-  repo.delete_spoke(spoke_id).await
-    .map_err(to_server_error)
-}*/

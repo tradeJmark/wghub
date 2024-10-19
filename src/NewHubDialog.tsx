@@ -1,8 +1,5 @@
 import { FormField, TextInput } from "grommet"
-import { useContext, useState } from "react"
-// import { Hub } from "./model/Hub"
-// import { expandHub, newHub } from "./features/hubs/hubsSlice"
-import { useAppDispatch, useAppSelector } from "./app/hooks"
+import { useState } from "react"
 import { Dialog, DialogProps } from "./Dialog"
 import { useCreateHubMutation, useGetHubsQuery } from "./features/api"
 import { Hub } from "wghub-rust-web"
@@ -14,8 +11,7 @@ interface FormData {
 
 const emptyForm = {name: '', description: ''}
 
-export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
-  // const dispatch = useAppDispatch()
+export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData, string>) => {
   const [formData, setFormData] = useState<FormData>(emptyForm)
 
   const [createHub] = useCreateHubMutation()
@@ -24,8 +20,8 @@ export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
       formData.name, 
       formData.description
     )
-    //dispatch(expandHub(hub.name))
     createHub(hub)
+    return hub.id
   }
 
   //const hubNames = useAppSelector(state => state.hubs.ids)

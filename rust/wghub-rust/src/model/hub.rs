@@ -14,16 +14,11 @@ pub struct Hub {
   id: Uuid,
   pub name: String,
   pub description: Option<String>,
-  #[serde(rename = "publicKey")]
   pub public_key: Option<String>,
   pub endpoint: Option<String>,
-  #[serde(rename = "ipAddress")]
   pub ip_address: Option<String>,
-  #[serde(rename = "dnsServers")]
   pub dns_servers: Vec<String>,
-  #[serde(rename = "searchDomains")]
   pub search_domains: Vec<String>,
-  #[serde(rename = "allowedIPs")]
   pub allowed_ips: Vec<String>
 }
 

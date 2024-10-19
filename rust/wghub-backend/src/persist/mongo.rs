@@ -38,14 +38,9 @@ impl Persist for MongoPersist {
     let cursor = collection.find(doc! {}).await?;
     cursor.try_collect().await.map_err(Into::into)
   }
-  async fn get_all_spokes(&mut self) -> Result<Vec<Spoke>, super::Error> {
-    let collection = self.db.collection("spokes");
-    let cursor = collection.find(doc! {}).await?;
-    cursor.try_collect().await.map_err(Into::into)
-  }
   async fn get_spokes_for_hub(&mut self, hub_id: Uuid) -> Result<Vec<Spoke>, super::Error> {
     let collection = self.db.collection("spokes");
-    let query = doc! { "hub": to_bson(&hub_id)? };
+    let query = doc! { "hub_id": to_bson(&hub_id)? };
     let cursor = collection.find(query).await?;
     cursor.try_collect().await.map_err(Into::into)
   }
@@ -64,7 +59,7 @@ impl Persist for MongoPersist {
   }
   async fn upsert_spoke(&mut self, spoke: Spoke) -> Result<Uuid, super::Error> {
     let collection = self.db.collection("spokes");
-    let query = doc! { "_id": to_bson(&spoke.id)? };
+    let query = doc! { "_id": to_bson(&spoke.id())? };
     collection.replace_one(query, spoke).upsert(true).await
       .map_err(Into::into)
       .and_then(|res| res.upserted_id.ok_or(missing_id_error()))

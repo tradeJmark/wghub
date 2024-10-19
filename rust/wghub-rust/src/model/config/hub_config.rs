@@ -1,9 +1,10 @@
 use super::{SpokeData, HubData};
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "frontend")]
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "frontend", wasm_bindgen(getter_with_clone))]
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HubConfig {
   pub name: String,
   pub hub: HubData,
