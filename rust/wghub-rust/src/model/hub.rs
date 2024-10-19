@@ -1,24 +1,37 @@
 use serde::{Serialize, Deserialize};
+use uuid::Uuid;
+#[cfg(feature = "frontend")]
+use wasm_bindgen::prelude::*;
+#[cfg(feature = "frontend")]
+use serde_wasm_bindgen::{from_value, to_value};
+#[cfg(feature = "frontend")]
+use js_sys::JsString;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[cfg_attr(feature = "frontend", wasm_bindgen(getter_with_clone))]
 pub struct Hub {
   #[serde(rename = "_id")]
+  id: Uuid,
   pub name: String,
   pub description: Option<String>,
-  #[serde(rename = "publicKey")]
   pub public_key: Option<String>,
   pub endpoint: Option<String>,
-  #[serde(rename = "ipAddress")]
   pub ip_address: Option<String>,
-  #[serde(rename = "dnsServers")]
   pub dns_servers: Vec<String>,
-  #[serde(rename = "searchDomains")]
   pub search_domains: Vec<String>,
-  #[serde(rename = "allowedIPs")]
   pub allowed_ips: Vec<String>
 }
 
+impl PartialEq for Hub {
+  fn eq(&self, other: &Self) -> bool {
+    self.id == other.id
+  }
+}
+impl Eq for Hub {}
+
+#[cfg_attr(feature = "frontend", wasm_bindgen)]
 impl Hub {
+  #[cfg_attr(feature = "frontend", wasm_bindgen(constructor))]
   pub fn new(
     name: String,
     description: Option<String>,
@@ -30,6 +43,7 @@ impl Hub {
     allowed_ips: Option<Vec<String>>
   ) -> Hub {
     Hub {
+      id: Uuid::new_v4(),
       name,
       description,
       public_key,
@@ -40,7 +54,35 @@ impl Hub {
       allowed_ips: allowed_ips.unwrap_or(Vec::default())
     }
   }
+
+  #[cfg_attr(feature = "frontend", wasm_bindgen)]
   pub fn new_bare(name: String, description: Option<String>) -> Hub {
     Self::new(name, description, None, None, None, None, None, None)
+  }
+}
+
+#[cfg(not(feature = "frontend"))]
+impl Hub {
+  pub fn id(&self) -> Uuid {
+    self.id.clone()
+  }
+}
+
+#[cfg(feature = "frontend")]
+#[wasm_bindgen]
+impl Hub {
+  #[wasm_bindgen(js_name = toJSON)]
+  pub fn to_json(&self) -> JsValue {
+    to_value(self).unwrap()
+  }
+
+  #[wasm_bindgen(js_name = fromJSON)]
+  pub fn from_json(value: &JsValue) -> Hub {
+    from_value(value.clone()).unwrap()
+  }
+
+  #[wasm_bindgen(getter)]
+  pub fn id(&self) -> JsString {
+    self.id.to_string().into()
   }
 }

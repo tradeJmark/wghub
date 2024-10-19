@@ -1,10 +1,8 @@
 import { FormField, TextInput } from "grommet"
-import { useContext, useState } from "react"
-import { Hub } from "./model/Hub"
-import { expandHub, newHub } from "./features/hubs/hubsSlice"
-import { useAppDispatch, useAppSelector } from "./app/hooks"
+import { useState } from "react"
 import { Dialog, DialogProps } from "./Dialog"
-import { AppContext } from "./AppContext"
+import { useCreateHubMutation, useGetHubsQuery } from "./features/api"
+import { Hub } from "wghub-rust-web"
 
 interface FormData {
   name: string,
@@ -13,25 +11,23 @@ interface FormData {
 
 const emptyForm = {name: '', description: ''}
 
-export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData>) => {
-  const dispatch = useAppDispatch()
+export const NewHubDialog = ({ onDone, ...props }: DialogProps<FormData, string>) => {
   const [formData, setFormData] = useState<FormData>(emptyForm)
 
-  const ctx = useContext(AppContext)
+  const [createHub] = useCreateHubMutation()
   const submitData = (formData: FormData) => {
-    const hub: Hub = { 
-      name: formData.name, 
-      description: formData.description,
-      dnsServers: [],
-      searchDomains: [],
-      allowedIPs: []
-    }
-    dispatch(newHub(ctx.server, hub))
-    dispatch(expandHub(hub.name))
+    const hub = Hub.new_bare( 
+      formData.name, 
+      formData.description
+    )
+    createHub(hub)
+    return hub.id
   }
 
-  const hubNames = useAppSelector(state => state.hubs.ids)
-  const isDup = (name: string) => hubNames.includes(name)
+  //const hubNames = useAppSelector(state => state.hubs.ids)
+  const { data } = useGetHubsQuery()
+  const hubNames = data?.map(hub => hub.name)
+  const isDup = (name: string) => hubNames?.includes(name)
 
   return <Dialog
     title='New Hub'

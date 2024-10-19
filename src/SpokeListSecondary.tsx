@@ -1,44 +1,44 @@
 import { Box, Button, Text } from "grommet"
-import { Spoke, idFromSpoke } from "./model/Spoke"
 import { Checkbox, CheckboxSelected, Download, Edit, Trash } from "grommet-icons"
-import { useAppDispatch, useAppSelector } from "./app/hooks"
-import { deleteSpoke, toggleSpokeDisabled } from "./features/spokes/spokesSlice"
-import { useContext, useEffect, useState } from "react"
-import { HubData, SpokeCommonData, SpokeConfig, SpokeData, generateSpokeConfigFile } from "wghub-rust-web"
-import { hubSplitEndpoint } from "./model/Hub"
-import { AppContext } from "./AppContext"
+import { useEffect, useState } from "react"
+import { Hub, HubData, Spoke, SpokeCommonData, SpokeConfig, SpokeData, generateSpokeConfigFile } from "wghub-rust-web"
+import { splitAddressAndPort, Serialized } from "./util"
+import { selectSingleHub, useDeleteSpokeMutation, useGetHubsQuery, useToggleSpokeDisabledMutation } from "./features/api"
 
 export interface SpokeListSecondaryProps {
-  spoke: Spoke
-  onEdit: (spoke: Spoke) => void
+  spoke: Serialized<Spoke>
+  onEdit: (spoke: Serialized<Spoke>) => void
 }
-export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) => {
-  const ctx = useContext(AppContext)
-  const dispatch = useAppDispatch()
-  const hub = useAppSelector(state => state.hubs.entities[spoke.hub])
+export const SpokeListSecondary = ({ spoke: serSpoke, onEdit }: SpokeListSecondaryProps) => {
+  const spoke = Spoke.fromJSON(serSpoke)
+  const { data: hubData, isLoading: hubDataLoading } = useGetHubsQuery(undefined, selectSingleHub(spoke.hub_id))
+  const [deleteSpoke] = useDeleteSpokeMutation()
+  const [toggleSpokeDisabled] = useToggleSpokeDisabledMutation()
   const [downloadUrl, setDownloadUrl] = useState<string>(null)
   useEffect(() => {
-    if (Boolean(hub.publicKey) && Boolean(hub.endpoint)) {
-      const [endpointAddress, endpointPort] = hubSplitEndpoint(hub)
-      const hubData = new HubData(hub.publicKey, hub.ipAddress ?? '', endpointAddress, endpointPort)
-      const spokeData = new SpokeData(spoke.ipAddress, spoke.publicKey ?? '')
-      const common = new SpokeCommonData(hub.dnsServers, hub.searchDomains, hub.allowedIPs)
+    const hub = Hub.fromJSON(hubData)
+    const spoke = Spoke.fromJSON(serSpoke)
+    if (!hubDataLoading && Boolean(hub.public_key) && Boolean(hub.endpoint)) {
+      const [endpointAddress, endpointPort] = splitAddressAndPort(hub.endpoint)
+      const hubData = new HubData(hub.public_key, hub.ip_address ?? '', endpointAddress, endpointPort)
+      const spokeData = new SpokeData(spoke.ip_address, spoke.public_key ?? '')
+      const common = new SpokeCommonData(hub.dns_servers, hub.search_domains, hub.allowed_ips)
       const config = new SpokeConfig(hubData, spokeData, common)
       const blob = generateSpokeConfigFile(config)
       const address = URL.createObjectURL(blob)
       setDownloadUrl(address)
     }
     else setDownloadUrl(null)
-  }, [hub, spoke])
+  }, [hubData, serSpoke, hubDataLoading])
 
   return <Box direction='row' justify='between' gap='medium'>
-    <Text>{spoke.ipAddress}</Text>
+    <Text>{spoke.ip_address}</Text>
     <Box direction='row' gap='small'>
       <Button
-        icon={spoke.disabled || !Boolean(spoke.publicKey) ? <Checkbox /> : <CheckboxSelected />}
-        disabled={!Boolean(spoke.publicKey)}
+        icon={!spoke.generable() ? <Checkbox /> : <CheckboxSelected />}
+        disabled={!Boolean(spoke.public_key)}
         pad='xxsmall'
-        onClick={() => dispatch(toggleSpokeDisabled(ctx.server, idFromSpoke(spoke)))}
+        onClick={() => toggleSpokeDisabled({ hubId: spoke.hub_id, spokeId: spoke.id })}
       />
       <Button
         icon={<Download />}
@@ -47,8 +47,8 @@ export const SpokeListSecondary = ({ spoke, onEdit }: SpokeListSecondaryProps) =
         href={downloadUrl || undefined}
         download={Boolean(downloadUrl) ? `${spoke.name}.conf` : undefined}
       />
-      <Button icon={<Edit />} pad='xxsmall' onClick={() => onEdit(spoke)} />
-      <Button icon={<Trash />} pad='xxsmall' onClick={() => dispatch(deleteSpoke(ctx.server, idFromSpoke(spoke)))} />
+      <Button icon={<Edit />} pad='xxsmall' onClick={() => onEdit(serSpoke)} />
+      <Button icon={<Trash />} pad='xxsmall' onClick={() => deleteSpoke({ hubId: spoke.hub_id, spokeId: spoke.id })} />
     </Box>
   </Box>
 }

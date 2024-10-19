@@ -1,11 +1,9 @@
 import { FormField, TextInput } from "grommet"
-import { useCallback, useContext, useEffect, useState } from "react"
-import { setSpoke } from "./features/spokes/spokesSlice"
-import { useAppDispatch, useAppSelector } from "./app/hooks"
+import { useEffect, useMemo, useState } from "react"
 import { Dialog, DialogProps } from "./Dialog"
-import { genSpokeId, newSpoke } from "./model/Spoke"
-import { ipv4RegExp } from "./util"
-import { AppContext } from "./AppContext"
+import { ipv4RegExp, Serialized } from "./util"
+import { useCreateSpokeMutation, useGetSpokesForHubQuery, useUpdateSpokeMutation } from "./features/api"
+import { Spoke } from "wghub-rust-web"
 
 interface FormData {
   name: string
@@ -16,28 +14,38 @@ interface FormData {
 const emptyForm: FormData = {name: '', ipAddress: '', publicKey: ''}
 
 interface NewSpokeDialogProps extends DialogProps<FormData> {
-  hubName: string
-  spokeName?: string
+  hubId: string
+  original?: Serialized<Spoke>
 }
 
-export const NewSpokeDialog = ({ hubName, spokeName, onDone, ...props }: NewSpokeDialogProps)  => {
-  const ctx = useContext(AppContext)
-  const dispatch = useAppDispatch()
-  const editing = Boolean(spokeName)
-  const spoke = useAppSelector(state => state.spokes.entities[genSpokeId({hubName, spokeName})])
-  const otherSpokes = useAppSelector(state => state.spokes.ids)
-  const isDup = (name: string) => otherSpokes.includes(genSpokeId({spokeName: name, hubName}))
-  const defaultFormData: () => FormData = useCallback(() => {
-    return editing ?
-      {name: spoke.name, ipAddress: spoke.ipAddress, publicKey: spoke.publicKey ?? ''}
-      : emptyForm
-  }, [spoke, editing])
-  const [formData, setFormData] = useState<FormData>(defaultFormData())
-  useEffect(() => setFormData(defaultFormData()), [defaultFormData])
+export const NewSpokeDialog = ({ hubId, original, onDone, ...props }: NewSpokeDialogProps)  => {
+  const editing = Boolean(original)
+  const spoke = editing ? Spoke.fromJSON(original) : undefined
+  const { data: otherSpokesData, isLoading: otherSpokesLoading } = useGetSpokesForHubQuery(hubId)
+  let otherSpokes = !otherSpokesLoading ? otherSpokesData.map(Spoke.fromJSON) : []
+  if (editing) otherSpokes = otherSpokes.filter(s => s.id !== spoke.id)
+  const [createSpoke] = useCreateSpokeMutation()
+  const [updateSpoke] = useUpdateSpokeMutation()
+  const isDup = (name: string) => otherSpokes.some(s => s.name === name)
+  const defaultFormData: FormData = useMemo(() => editing ? {
+    name: original.name,
+    ipAddress: original.ip_address,
+    publicKey: original.public_key ?? ''
+  } : emptyForm, [original, editing])
+  const [formData, setFormData] = useState<FormData>(defaultFormData)
+  useEffect(() => setFormData(defaultFormData), [defaultFormData])
 
   const submitData = (formData: FormData) => {
-    const spoke = newSpoke(hubName, formData.name, formData.ipAddress, formData.publicKey)
-    dispatch(setSpoke(ctx.server, spoke))
+    if (editing) {
+      spoke.name = formData.name
+      spoke.ip_address = formData.ipAddress
+      spoke.public_key = formData.publicKey
+      updateSpoke(spoke)
+    }
+    else {
+      const newSpoke = Spoke.newUnbound(formData.name, formData.ipAddress, formData.publicKey, false)
+      createSpoke({ hubId, spoke: newSpoke })
+    }
   }
 
   return <Dialog
@@ -53,7 +61,7 @@ export const NewSpokeDialog = ({ hubName, spokeName, onDone, ...props }: NewSpok
     {...props}
   >
     <FormField label='Name' name='name' required validate={() => isDup(formData.name) ? "This name is already in use." : undefined}>
-      <TextInput name='name' autoFocus autoCapitalize='off' placeholder='Human-readable name' disabled={editing} />
+      <TextInput name='name' autoFocus autoCapitalize='off' placeholder='Human-readable name' />
     </FormField>
     <FormField
       label='IP Address'

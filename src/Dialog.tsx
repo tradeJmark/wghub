@@ -1,19 +1,20 @@
-import { Box, Button, Form, FormProps, Heading, Layer, LayerExtendedProps, ResponsiveContext } from "grommet";
+import { Box, Button, Form, FormExtendedEvent, FormProps, Heading, Layer, LayerExtendedProps, ResponsiveContext } from "grommet";
 import { useContext } from "react";
 
-export interface DialogProps<T> extends FormProps<T> {
+export interface DialogProps<T, R=void> extends FormProps<T> {
   visible: boolean
   title?: string
   children?: React.ReactNode
   layerProps?: LayerExtendedProps
-  onPositive?: () => void
+  onSubmit?(event: FormExtendedEvent<T, Element>): R
+  onPositive?: (result: R) => void
   onNegative?: () => void
   onDone?: () => void
   positiveButtonText?: string
   negativeButtonText?: string
 }
 
-export const Dialog = <T,>({ 
+export const Dialog = <T,R=void>({ 
   visible,
   title,
   layerProps,
@@ -25,13 +26,13 @@ export const Dialog = <T,>({
   positiveButtonText,
   negativeButtonText,
   ...props
-}: DialogProps<T>) => {
+}: DialogProps<T, R>) => {
   const fullOnNegative = () => {
     onNegative?.()
     onDone?.()
   }
-  const fullOnPositive = () => {
-    onPositive?.()
+  const fullOnPositive = (res) => {
+    onPositive?.(res)
     onDone?.()
   }
 
@@ -48,8 +49,8 @@ export const Dialog = <T,>({
       {title && <Heading level='3' margin={{top: 'none', bottom: 'small'}}>{title}</Heading>}
       <Form<T>
         onSubmit={event => {
-          onSubmit?.(event)
-          fullOnPositive()
+          const res = onSubmit?.(event)
+          fullOnPositive(res)
         }}
         validate="change"
         {...props}

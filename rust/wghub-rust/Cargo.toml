@@ -4,12 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-wasm = ["wasm-bindgen", "ws_stream_wasm"]
-axum = ["dep:axum"]
+frontend = ["wasm-bindgen", "uuid/js", "js-sys", "serde-wasm-bindgen"]
+serde-wasm-bindgen = ["dep:serde-wasm-bindgen"]
 
 [dependencies]
-wasm-bindgen = { version = "0.2.84", optional = true }
 serde = { version = "1.0.188", features = ["derive"] }
-serde_json = { version = "1.0.105" }
-axum = { version = "0.6.20", features = ["ws"], optional = true }
-ws_stream_wasm = { version = "0.7", optional = true }
+uuid = { version = "1.11.0", features = ["serde", "v4", "js"] }
+wasm-bindgen = { version = "0.2.95", optional = true }
+js-sys = { version = "0.3.72", optional = true }
+serde-wasm-bindgen = { version = "0.6.5", optional = true }
+serde_json = "1.0.131"

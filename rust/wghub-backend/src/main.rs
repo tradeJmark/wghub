@@ -1,27 +1,9 @@
-mod ws_session;
-mod persist;
-
-use std::{env, error::Error, sync::Arc};
-use axum::{routing::get, Router, extract::{WebSocketUpgrade, ws::WebSocket, State}, response::Response};
-use persist::{Persist, mongo::MongoPersist, in_mem::InMemPersist};
-use tokio::sync::Mutex;
-use ws_session::WsSession;
-
-#[derive(Clone)]
-pub struct AppState {
-  persist: Arc<Mutex<dyn Persist>>
-}
-
-impl AppState {
-  fn new() -> Self {
-    AppState { persist: Arc::new(Mutex::new(InMemPersist::new())) }
-  }
-
-  async fn new_from_mongo(connection_string: String, db_name: String) -> Result<Self, mongodb::error::Error> {
-    let mongo = MongoPersist::new(connection_string, db_name).await?;
-    Ok(AppState { persist: Arc::new(Mutex::new(mongo)) })
-  }
-}
+use axum::{serve, Router};
+use tokio::net::TcpListener;
+use tower_http::cors::{Any, CorsLayer};
+use wghub_backend::{api, AppState};
+use std::{env, error::Error};
+use http::{header::CONTENT_TYPE, Method};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -32,22 +14,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
   else {
     AppState::new()
   };
+
+  let cors = CorsLayer::new()
+   .allow_methods([Method::GET, Method::POST, Method::DELETE])
+   .allow_origin(Any)
+   .allow_headers([CONTENT_TYPE]);
+
   let app = Router::new()
-    .route("/ws", get(handle_ws_connection))
-    .with_state(state);
+    .nest("/api", api::build_router())
+    .with_state(state)
+    .layer(cors);
   
-  axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
-    .serve(app.into_make_service())
+  let listener = TcpListener::bind(&"0.0.0.0:8080").await?;
+  serve(listener, app)
     .await
-    .unwrap();
+    .unwrap();  
   Ok(())
-}
-
-async fn handle_ws_connection(wsu: WebSocketUpgrade, State(state): State<AppState>) -> Response {
-  wsu.on_upgrade(|socket| handle_socket(socket, state))
-}
-
-async fn handle_socket(socket: WebSocket, state: AppState) {
-  let mut session = WsSession::new(state, socket);
-  session.launch().await;
 }
