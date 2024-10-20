@@ -1,0 +1,16 @@
+[package]
+name = "wghub-backend"
+version = "0.1.0"
+edition = "2021"
+default-run = "wghub-backend"
+
+[dependencies]
+async-trait = "0.1.83"
+axum = "0.7.7"
+futures-util = "0.3.31"
+http = "1.1.0"
+mongodb = "3.1.0"
+tokio = { version = "1.40.0", features = ["sync"] }
+tower-http = { version = "0.6.1", features = ["cors"] }
+uuid = "1.11.0"
+wghub-shared = { path = "../wghub-shared" }
