@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "wghub-backend",
+    "wghub-frontend",
+    "wghub-shared"
+]
+resolver = "2"

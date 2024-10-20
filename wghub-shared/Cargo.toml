@@ -1,0 +1,14 @@
+[package]
+name = "wghub-shared"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+js-sys = { version = "0.3.72", optional = true }
+serde = { version = "1.0.210", features = ["derive"] }
+serde-wasm-bindgen = { version = "0.6.5", optional = true }
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+wasm-bindgen = { version = "0.2.95", optional = true }
+
+[features]
+frontend = ["wasm-bindgen", "serde-wasm-bindgen", "js-sys", "uuid/js"]
