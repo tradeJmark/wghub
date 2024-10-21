@@ -29,6 +29,12 @@ impl PartialEq for Hub {
 }
 impl Eq for Hub {}
 
+impl Hub {
+  pub fn id(&self) -> Uuid {
+    self.id.clone()
+  }
+}
+
 #[cfg_attr(feature = "frontend", wasm_bindgen)]
 impl Hub {
   #[cfg_attr(feature = "frontend", wasm_bindgen(constructor))]
@@ -61,13 +67,6 @@ impl Hub {
   }
 }
 
-#[cfg(not(feature = "frontend"))]
-impl Hub {
-  pub fn id(&self) -> Uuid {
-    self.id.clone()
-  }
-}
-
 #[cfg(feature = "frontend")]
 #[wasm_bindgen]
 impl Hub {
@@ -81,8 +80,8 @@ impl Hub {
     from_value(value.clone()).unwrap()
   }
 
-  #[wasm_bindgen(getter)]
-  pub fn id(&self) -> JsString {
+  #[wasm_bindgen(getter = id)]
+  pub fn js_id(&self) -> JsString {
     self.id.to_string().into()
   }
 }

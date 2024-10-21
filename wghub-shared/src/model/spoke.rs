@@ -36,6 +36,18 @@ impl Spoke {
   pub fn is_unbound(&self) -> bool {
     self.hub_id.is_nil()
   }
+
+  pub fn id(&self) -> Uuid {
+    self.id.clone()
+  }
+
+  pub fn hub_id(&self) -> Uuid {
+    self.hub_id.clone()
+  }
+
+  pub fn set_hub_id(&mut self, hub_id: Uuid) {
+    self.hub_id = hub_id;
+  }
 }
 
 #[cfg_attr(feature = "frontend", wasm_bindgen)]
@@ -47,21 +59,6 @@ impl Spoke {
 
   pub fn generable(&self) -> bool {
     !self.disabled && !self.public_key.as_ref().map(String::is_empty).unwrap_or(true)
-  }
-}
-
-#[cfg(not(feature = "frontend"))]
-impl Spoke {
-  pub fn id(&self) -> Uuid {  
-    self.id.clone()
-  }
-
-  pub fn hub_id(&self) -> Uuid {
-    self.hub_id.clone()
-  }
-
-  pub fn set_hub_id(&mut self, hub_id: Uuid) {
-    self.hub_id = hub_id;
   }
 }
 
@@ -78,13 +75,13 @@ impl Spoke {
     from_value(value.clone()).unwrap()
   }
 
-  #[wasm_bindgen(getter)]
-  pub fn id(&self) -> JsString {
+  #[wasm_bindgen(getter = id)]
+  pub fn js_id(&self) -> JsString {
     self.id.to_string().into()
   }
 
-  #[wasm_bindgen(getter)]
-  pub fn hub_id(&self) -> JsString {
+  #[wasm_bindgen(getter = hub_id)]
+  pub fn js_hub_id(&self) -> JsString {
     self.hub_id.to_string().into()
   }
 }

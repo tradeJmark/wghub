@@ -5,3 +5,6 @@ members = [
     "wghub-shared"
 ]
 resolver = "2"
+
+[workspace.dependencies]
+wghub-shared = { path = "wghub-shared" }
