@@ -1,2 +1,2 @@
 [env]
-FRONTEND_PATH = { value = "wghub-ui/dist", relative = true }
+WGHUB_FRONTEND_PATH = { value = "wghub-ui/dist", relative = true }

@@ -6,11 +6,14 @@ use wasm_bindgen::prelude::*;
 use serde_wasm_bindgen::{from_value, to_value};
 #[cfg(feature = "frontend")]
 use js_sys::JsString;
+#[cfg(feature = "bson")]
+use bson::serde_helpers::uuid_1_as_binary;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[cfg_attr(feature = "frontend", wasm_bindgen(getter_with_clone))]
 pub struct Hub {
   #[serde(rename = "_id")]
+  #[cfg_attr(feature = "bson", serde(with = "uuid_1_as_binary"))]
   id: Uuid,
   pub name: String,
   pub description: Option<String>,

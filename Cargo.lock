@@ -1952,6 +1952,7 @@ dependencies = [
 name = "wghub-shared"
 version = "0.1.0"
 dependencies = [
+ "bson",
  "js-sys",
  "serde",
  "serde-wasm-bindgen",

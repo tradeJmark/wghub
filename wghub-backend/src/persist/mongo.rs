@@ -1,9 +1,11 @@
-use async_trait::async_trait;
-use mongodb::{bson::{doc, from_bson, to_bson}, options::{ClientOptions, UpdateModifications}, Client, Database};
-use wghub_shared::model::{Hub, Spoke};
-use futures_util::stream::TryStreamExt;
 use super::Persist;
+use async_trait::async_trait;
+use futures_util::stream::TryStreamExt;
+use mongodb::bson::serde_helpers::serialize_uuid_1_as_binary;
+use mongodb::bson::{to_document, Bson, Serializer};
+use mongodb::{bson::doc, options::{ClientOptions, UpdateModifications}, Client, Database};
 use uuid::Uuid;
+use wghub_shared::model::{Hub, Spoke};
 
 pub struct MongoPersist {
   db: Database
@@ -40,39 +42,45 @@ impl Persist for MongoPersist {
   }
   async fn get_spokes_for_hub(&mut self, hub_id: Uuid) -> Result<Vec<Spoke>, super::Error> {
     let collection = self.db.collection("spokes");
-    let query = doc! { "hub_id": to_bson(&hub_id)? };
+    let hub_id_bson = uuid_to_bson(hub_id)?;
+    let query = doc! { "hub_id": hub_id_bson };
     let cursor = collection.find(query).await?;
     cursor.try_collect().await.map_err(Into::into)
   }
   async fn upsert_hub(&mut self, hub: Hub) -> Result<Uuid, super::Error>{
     let collection = self.db.collection("hubs");
-    let query = doc! { "_id": to_bson(&hub.id())? };
-    collection.replace_one(query, hub).upsert(true).await
+    let mut hub_upsert = to_document(&hub)?;
+    let id = hub_upsert.remove("_id").unwrap()  ;
+    let query = doc! { "_id": id };
+    collection.replace_one(query, hub_upsert).upsert(true).await
+        .map(|_| hub.id())
       .map_err(Into::into)
-      .and_then(|res| res.upserted_id.ok_or(missing_id_error()))
-      .and_then(|id| from_bson(id).map_err(|_| unparseable_id_error()))
   }
   async fn delete_hub(&mut self, id: Uuid) -> Result<(), super::Error> {
     let collection = self.db.collection::<Hub>("hubs");
-    let query = doc! { "_id": to_bson(&id)? };
-    collection.delete_one(query).await.map(|_| ()).map_err(|e|e.into())
+    let id_bson = uuid_to_bson(id)?;
+    let query = doc! { "_id": id_bson };
+    collection.delete_one(query).await.map(|_| ()).map_err(Into::into)
   }
   async fn upsert_spoke(&mut self, spoke: Spoke) -> Result<Uuid, super::Error> {
     let collection = self.db.collection("spokes");
-    let query = doc! { "_id": to_bson(&spoke.id())? };
-    collection.replace_one(query, spoke).upsert(true).await
+    let mut spoke_upsert = to_document(&spoke)?;
+    let id = spoke_upsert.remove("_id").unwrap();
+    let query = doc! { "_id": id };
+    collection.replace_one(query, spoke_upsert).upsert(true).await
+        .map(|_| spoke.id())
       .map_err(Into::into)
-      .and_then(|res| res.upserted_id.ok_or(missing_id_error()))
-      .and_then(|id| from_bson(id).map_err(|_| unparseable_id_error()))
   }
   async fn delete_spoke(&mut self, id: Uuid) -> Result<(), super::Error> {
     let collection = self.db.collection::<Spoke>("spokes");
-    let query = doc! { "_id": to_bson(&id)? };
+    let id_bson = uuid_to_bson(id)?;
+    let query = doc! { "_id": id_bson };
     collection.delete_one(query).await.map(|_| ()).map_err(Into::into)
   }
   async fn toggle_spoke_disabled(&mut self, id: Uuid) -> Result<(), super::Error> {
     let collection = self.db.collection::<Spoke>("spokes");
-    let query = doc! { "_id": to_bson(&id)? };
+    let id_bson = uuid_to_bson(id)?;
+    let query = doc! { "_id": id_bson };
     let operations = vec![
       doc! { "$set": {"disabled": {"$not": "$disabled"}} }
     ];
@@ -81,10 +89,7 @@ impl Persist for MongoPersist {
   }
 }
 
-fn missing_id_error() -> super::Error {
-  super::Error::SourceError("The data was updated, but the provider failed to return an ID.".to_owned())
-}
-
-fn unparseable_id_error() -> super::Error {
-  super::Error::SourceError("The data was updated, but the provider returned an unparseable ID.".to_owned())
+fn uuid_to_bson(id: Uuid) -> Result<Bson, mongodb::bson::ser::Error> {
+  let ser = Serializer::new();
+  serialize_uuid_1_as_binary(&id, ser)
 }
