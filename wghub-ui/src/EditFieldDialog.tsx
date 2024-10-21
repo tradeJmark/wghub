@@ -5,12 +5,12 @@ import { Dialog, DialogProps } from './Dialog'
 import { selectSingleHub, useGetHubsQuery, useUpdateHubMutation } from './features/api'
 import { Hub } from 'wghub-frontend'
 
-export type FieldName = NoID<KeyOfType<Hub, string | string[]>>
+export type FieldName = NoID<KeyOfType<Hub, string | string[] | undefined>>
 
 interface EditFieldDialogProps extends DialogProps<FormData> {
   hubId: string,
-  fieldName: FieldName
-  fieldDisplayName: string
+  fieldName?: FieldName
+  fieldDisplayName?: string
   placeholder?: string
   array?: boolean
   validation?: { regexp: RegExp, message?: string }

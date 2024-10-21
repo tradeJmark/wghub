@@ -1,4 +1,4 @@
-import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, ThemeContext, Spinner } from 'grommet'
+import { grommet, Box, Grommet, Header, Page, PageContent, Text, HeaderExtendedProps, Spinner } from 'grommet'
 import { deepMerge } from 'grommet/utils'
 import { useState } from 'react';
 import { NewHubDialog } from './NewHubDialog';
@@ -34,26 +34,18 @@ const theme = deepMerge(grommet, {
     }
 })
 
-const appBarTheme = {
-    select: {
-        background: 'white'
-    }
+const AppBar = ({children, ...props}: HeaderExtendedProps) => {
+    return <Header
+        className='appBar'
+        background="brand"
+        pad='small'
+        elevation="medium"
+        justify='around'
+        {...props}
+    >
+        {children}
+    </Header>
 }
-
-const AppBar = ({children, ...props}: HeaderExtendedProps) => (
-    <ThemeContext.Extend value={appBarTheme}>
-        <Header
-            className='appBar'
-            background="brand"
-            pad='small'
-            elevation="medium"
-            justify='around'
-            {...props}
-        >
-            {children}
-        </Header>
-    </ThemeContext.Extend>
-)
 
 export const App = () => {
     const [newHubVisible, setNewHubVisible] = useState(false)
@@ -79,7 +71,7 @@ export const App = () => {
                 onDone={() => {
                     closeNewHub()
                 }}
-                onPositive={(hubId) => expandHub(hubId)}
+                onPositive={(hubId) => { if (hubId) { expandHub(hubId) } } }
             />
             <Page>
                 <AppBar>
@@ -113,7 +105,7 @@ export const App = () => {
                 icon={<Add />}
                 onClick={showNewHub}
             />
-            <ImpExpFooter showExport={hubs?.length > 0} />
+            <ImpExpFooter showExport={(hubs?.length ?? 0) > 0} />
         </Grommet>
     );
 }

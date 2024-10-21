@@ -13,7 +13,7 @@ export interface SpokeListProps extends BoxExtendedProps {
 
 export const SpokeList = ({ hubId, ...props }: SpokeListProps) => {
   const { isLoading, data: spokes } = useGetSpokesForHubQuery(hubId)
-  const [spokeToEdit, setEditSpoke] = useState<Serialized<Spoke>>(undefined)
+  const [spokeToEdit, setEditSpoke] = useState<Serialized<Spoke> | undefined>(undefined)
   const [newSpokeVisible, setNewSpokeVisible] = useState(false)
   const showNewSpokeDialog = () => setNewSpokeVisible(true)
   const hideNewSpokeDialog = () => {
@@ -33,7 +33,7 @@ export const SpokeList = ({ hubId, ...props }: SpokeListProps) => {
     <Box {...props} gap='medium' align='center'>
       <Heading margin='none' alignSelf='center' level='3'>Spokes</Heading>
       {isLoading && <Spinner />}
-      {spokes?.length > 0 ? <List<Serialized<Spoke>>
+      {(spokes?.length ?? 0) > 0 ? <List<Serialized<Spoke>>
         primaryKey={spoke => <Box key={'!name ' + spoke.name} width={size === 'small' ? '100px' : undefined}><Text  truncate>{spoke.name}</Text></Box>}
         itemKey={spoke => spoke.id}
         secondaryKey={spoke => <SpokeListSecondary key={spoke.name} spoke={spoke} onEdit={editSpoke} />}

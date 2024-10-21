@@ -1,55 +1,56 @@
 import { Box, Button, FileInput, Footer, FormField } from "grommet"
-import { useCallback, useEffect, useState } from "react"
-import { useAppDispatch, useAppSelector } from "./app/hooks"
 import { Dialog } from "./Dialog"
-//import { importHubs } from "./features/hubs/hubsSlice"
-//import { importSpokes } from "./features/spokes/spokesSlice"
-import { Warning } from "./Warning"
-import { Hub } from "wghub-rust-web"
+//import { Warning } from "./Warning"
+import { Hub, Spoke } from "wghub-frontend"
+import {useGetHubsQuery} from "./features/api.ts";
+import {useCallback, useEffect, useState} from "react";
+import {Serialized} from "./util.ts";
 
 export interface ImpExpFooterProps {
   showExport: boolean
 }
 
-interface Data {
+/*interface Data {
   hubs: Hub[],
-  //spokes: Spoke[]
-}
+  spokes: Spoke[]
+}*/
 
-const isData = (maybe: any): maybe is Data => {
+/*const isData = (maybe: any): maybe is Data => {
   return 'hubs' in maybe && 'spokes' in maybe
-}
+}*/
 
 interface FormData {
   file: File[]
 }
 
+const EMPTY: Serialized<Spoke>[] = []
+
 export const ImpExpFooter = ({ showExport }: ImpExpFooterProps) => {
-  // const allHubs = useAppSelector(state => state.hubs.entities)
-  // const allSpokes = useAppSelector(state => state.spokes.entities)
-  /* const createExportUrl = useCallback(() => {
+  const { data: hubData } = useGetHubsQuery()
+  const spokeData: Serialized<Spoke>[] = EMPTY //Just to get it to compile
+  const createExportUrl = useCallback(() => {
+    const allHubs = hubData?.map(Hub.fromJSON) ?? []
+    const allSpokes = spokeData.map(Spoke.fromJSON)
     const str = JSON.stringify({hubs: allHubs, spokes: allSpokes})
     const blob = new Blob([str])
     return URL.createObjectURL(blob)
-  }, [allHubs, allSpokes]) */
-  // const [exportUrl, setExportUrl] = useState(createExportUrl())
-  // useEffect(() => setExportUrl(createExportUrl()), [createExportUrl])
+  }, [hubData, spokeData])
+  const [exportUrl, setExportUrl] = useState(createExportUrl())
+  useEffect(() => setExportUrl(createExportUrl()), [createExportUrl])
 
-  /*const [showImport, setShowImport] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [formData, setFormData] = useState({file: []})
-  const [errorMessage, setErrorMessage] = useState('')
-
-  const dispatch = useAppDispatch()*/
+  //const [errorMessage, setErrorMessage] = useState('')
 
   return <Footer margin='medium'>
     <Dialog<FormData>
       positiveButtonText='import'
-      visible={false/*showImport*/}
+      visible={showImport}
       onDone={() => {
-        // setShowImport(false)
-        // setFormData({file: []})
+        //setShowImport(false)
+        setFormData({file: []})
       }}
-      //value={formData}
+      value={formData}
       //onChange={setFormData}
       /*onSubmit={async ({ value }) => {
         const text = await value.file[0].text()
@@ -69,8 +70,8 @@ export const ImpExpFooter = ({ showExport }: ImpExpFooterProps) => {
     </Dialog>
     <Box direction='column' fill='horizontal' align='center'>
       <Box fill='horizontal' direction="row" justify='center' gap='medium'>
-        {/*showExport && <Button label="Export" href={exportUrl} download="wghub.json" />*/}
-        <Button label="Import" /*onClick={() => setShowImport(true)} *//>
+        {showExport && <Button label="Export" href={exportUrl} download="wghub.json" />}
+        <Button label="Import" onClick={() => setShowImport(true)} />
       </Box>
       {/*errorMessage && <Warning>{errorMessage}</Warning>*/}
     </Box>
