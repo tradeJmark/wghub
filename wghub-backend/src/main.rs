@@ -4,6 +4,7 @@ use tower_http::cors::{Any, CorsLayer};
 use wghub_backend::{api, AppState};
 use std::{env, error::Error};
 use http::{header::CONTENT_TYPE, Method};
+use tower_http::services::ServeDir;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -15,19 +16,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     AppState::new()
   };
 
-  let cors = CorsLayer::new()
-   .allow_methods([Method::GET, Method::POST, Method::DELETE])
-   .allow_origin(Any)
-   .allow_headers([CONTENT_TYPE]);
+  let frontend = serve_frontend()?;
 
   let app = Router::new()
     .nest("/api", api::build_router())
-    .with_state(state)
-    .layer(cors);
+    .nest_service("/", frontend)
+    .with_state(state);
   
   let listener = TcpListener::bind(&"0.0.0.0:8080").await?;
   serve(listener, app)
     .await
     .unwrap();  
   Ok(())
+}
+
+fn serve_frontend() -> Result<ServeDir, Box<dyn Error>> {
+  let frontend_path = env::var("FRONTEND_PATH")?;
+  Ok(ServeDir::new(frontend_path))
 }

@@ -36,13 +36,13 @@ export interface HubDisplayProps extends BoxExtendedProps {
 }
 
 export const HubDisplay = ({ hubId, expanded, onExpandSet, ...props }: HubDisplayProps) => { 
-  const [editField, _setEditField] = useState<HubEditData>(null)
+  const [editField, _setEditField] = useState<HubEditData | null>(null)
   const setEditField = (
     name: FieldName,
     displayName: string,
-    placeholder=undefined,
-    inputValidation=undefined,
-    inputFinalize=undefined,
+    placeholder?: string,
+    inputValidation?: {regexp: RegExp, message?: string},
+    inputFinalize?: (newValue: string) => string,
     array=false
   ) => {
     _setEditField({
@@ -63,17 +63,17 @@ export const HubDisplay = ({ hubId, expanded, onExpandSet, ...props }: HubDispla
   const { isLoading: spokesAreLoading, data: serSpokes } = useGetSpokesForHubQuery(hub.id)
   const toggleExpand = () => onExpandSet(!expanded)
 
-  const [downloadLink, setDownloadLink] = useState<string>(null)
+  const [downloadLink, setDownloadLink] = useState<string | null>(null)
 
   useEffect(() => {
     const hub = Hub.fromJSON(shub)
     if (!spokesAreLoading && !isLoading && Boolean(hub.endpoint) && Boolean(hub.ip_address)) {
       const spokes = serSpokes?.map(s => Spoke.fromJSON(s))
-      const [endpointAddress, endpointPort] = splitAddressAndPort(hub.endpoint)
-      const hubData = new HubData(hub.public_key ?? '', hub.ip_address, endpointAddress, endpointPort)
-      const spokeData = spokes.filter(spoke => spoke.generable()).map(spoke => new SpokeData(spoke.ip_address, spoke.public_key))
-      const config = new HubConfig(hub.name, hubData, spokeData)
-      let blob = generateHubConfigFile(config)
+      const [endpointAddress, endpointPort] = splitAddressAndPort(hub.endpoint!)
+      const hubData = new HubData(hub.public_key ?? '', hub.ip_address!, endpointAddress, endpointPort)
+      const spokeData = spokes?.filter(spoke => spoke.generable()).map(spoke => new SpokeData(spoke.ip_address, spoke.public_key!))
+      const config = new HubConfig(hub.name, hubData, spokeData ?? [])
+      const blob = generateHubConfigFile(config)
       setDownloadLink(URL.createObjectURL(blob))
     }
     else setDownloadLink(null)
@@ -81,7 +81,7 @@ export const HubDisplay = ({ hubId, expanded, onExpandSet, ...props }: HubDispla
 
   const size = useContext(ResponsiveContext)
 
-  const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<NoID<KeyOfType<Hub, string>>>) => {
+  const HubField = ({ name, displayName, editPlaceholder, inputValidation, inputFinalize }: FieldProps<NoID<KeyOfType<Hub, string | undefined>>>) => {
     return <TruncatableTag
       limit={size === 'small' ? 20 : 30}
       name={displayName}
@@ -189,9 +189,9 @@ export const HubDisplay = ({ hubId, expanded, onExpandSet, ...props }: HubDispla
                 primary
                 label={size === 'small' ? 'Download' : undefined}
                 icon={<Download />}
-                disabled={!Boolean(downloadLink)}
+                disabled={!downloadLink}
                 href={downloadLink || undefined}
-                download={Boolean(downloadLink) ? `${hub.name}.conf` : undefined}
+                download={downloadLink ? `${hub.name}.conf` : undefined}
               />
             </CardFooter>
           </Collapsible>

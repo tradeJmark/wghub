@@ -1,4 +1,6 @@
-import { Button, ButtonExtendedProps, Tag, TagExtendedProps, ThemeContext } from "grommet";
+import { Button, ButtonExtendedProps, Tag, TagExtendedProps } from "grommet";
+//Workaround from https://github.com/grommet/grommet/issues/7122
+import { ThemeContext } from "grommet/contexts/ThemeContext";
 
 export const RoundedButton = (props: ButtonExtendedProps) => {
   return <ThemeContext.Extend
