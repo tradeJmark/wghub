@@ -1,6 +1,6 @@
 services:
-  wghub:
-    container_name: wghub
+  wghub-dev-local:
+    container_name: wghub-dev-local
     build:
       context: .
     ports:

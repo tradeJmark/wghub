@@ -16,8 +16,10 @@ interface SpokeDescriptor {
   spokeId: string
 }
 
+const apiUrl = `${window.location.protocol}//${window.location.host}/api`
+
 export const api = createApi({
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8080/api', credentials: "same-origin" }),
+  baseQuery: fetchBaseQuery({ baseUrl: apiUrl }),
   tagTypes: [HUBS_TAG, SPOKES_TAG],
   endpoints: (builder) => ({
     getHubs: builder.query<Serialized<Hub>[], void>({
