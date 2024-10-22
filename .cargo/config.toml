@@ -1,2 +1,5 @@
 [env]
 WGHUB_FRONTEND_PATH = { value = "wghub-ui/dist", relative = true }
+
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+bulk-memory"]
