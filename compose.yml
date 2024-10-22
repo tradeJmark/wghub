@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   wghub:
     container_name: wghub
@@ -7,3 +5,11 @@ services:
       context: .
     ports:
       - "8080:80"
+    environment:
+      WGHUB_MONGO_CONNECTION_STRING: "mongodb://wghub-dev-mongo"
+      WGHUB_MONGO_DATABASE_NAME: wghub
+  wghub-dev-mongo:
+    container_name: wghub-dev-mongo
+    image: mongo
+    volumes:
+      - ./mongo.local/data:/data/db
