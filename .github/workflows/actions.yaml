@@ -46,7 +46,9 @@ jobs:
         working-directory: ./wghub-ui
         run: npm run build
       - name: Set up musl
-        run: apt install musl-dev musl-tools
+        run: |
+          sudo apt update
+          sudo apt install musl-dev musl-tools
       - name: Build backend
         run: cargo build --release --target x86_64-unknown-linux-musl
       - name: Push to GitHub Packages
