@@ -14,12 +14,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     AppState::new()
   };
 
-  let frontend = serve_frontend()?;
+  let frontend = serve_frontend();
 
-  let app = Router::new()
-    .nest("/api", api::build_router())
-    .nest_service("/", frontend)
-    .with_state(state);
+  let mut stateless_app = Router::new()
+    .nest("/api", api::build_router());
+  if let Some(frontend) = frontend {
+    stateless_app = stateless_app.nest_service("/", frontend);
+  }
+  let app = stateless_app.with_state(state);
 
   let address = get_address();
 
@@ -30,9 +32,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
   Ok(())
 }
 
-fn serve_frontend() -> Result<ServeDir, Box<dyn Error>> {
-  let frontend_path = env::var("WGHUB_FRONTEND_PATH")?;
-  Ok(ServeDir::new(frontend_path))
+fn serve_frontend() -> Option<ServeDir> {
+  env::var("WGHUB_FRONTEND_PATH")
+      .ok()
+      .map(|path| ServeDir::new(path))
 }
 
 fn get_address() -> String {

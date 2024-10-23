@@ -1,5 +1,5 @@
-[env]
-WGHUB_FRONTEND_PATH = { value = "wghub-ui/dist", relative = true }
+[alias]
+run-full = "run --config .cargo/full.toml"
 
 [target.wasm32-unknown-unknown]
 rustflags = ["-C", "target-feature=+bulk-memory"]
